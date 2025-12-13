@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, jsonify, redirect, url_for
+from flask import Flask, render_template, request, session, jsonify, redirect, url_for, send_from_directory
 from flask_wtf import FlaskForm
 from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
@@ -8,18 +8,28 @@ import cv2
 import uuid
 from core.detector import detection
 from utils.file_handler import handle_upload
+from utils.db import init_db, get_job, update_job
+
+init_db()
 
 app = Flask(__name__)  
 app.config['SECRET_KEY'] = 'kongesque'  
-app.config['UPLOAD_FOLDER'] = 'static/files/input'  
+app.config['UPLOAD_FOLDER'] = 'uploads/videos'  
+
+# Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs('static/files/frame', exist_ok=True) # Ensure this exists too
+os.makedirs('uploads/frames', exist_ok=True)
+os.makedirs('uploads/outputs', exist_ok=True)
 
 class UploadFileForm(FlaskForm):
     file = FileField("File", validators=[InputRequired()])
     submit = SubmitField("Run")
 
 # Routes
+@app.route('/media/<path:filename>')
+def media_file(filename):
+    return send_from_directory('uploads', filename)
+
 @app.route('/', methods=['GET', 'POST'])
 def main():
     form = UploadFileForm()
@@ -34,18 +44,13 @@ def draw():
     if not taskID:
         return redirect(url_for('main'))
         
-    points_key = 'points_' + taskID
-    if points_key not in session:
-        session[points_key] = []
-        
-    color_key = 'color_' + taskID
-    if color_key not in session:
-        session[color_key] = (5, 189, 251)
-        
-    video_path_key = 'video_path_' + taskID
 
-    if video_path_key in session:
-        return render_template('draw.html', taskID=taskID)
+    job = get_job(taskID)
+    if not job:
+         return redirect(url_for('main'))
+         
+    if job.get('frame_path'):
+         return render_template('draw.html', taskID=taskID)
     return redirect(url_for('main'))
 
 @app.route('/submit', methods=['POST'])
@@ -54,16 +59,15 @@ def submit():
     if not taskID:
         return redirect(url_for('main'))
         
-    video_path_key = 'video_path_' + taskID
-    frame_size_key = 'frame_size_' + taskID
-    color_key = 'color_' + taskID
-    points_key = 'points_' + taskID
+    job = get_job(taskID)
+    if not job:
+        return redirect(url_for('main'))
     
     # Process the video
     # Note: detection is a generator, so we need to iterate to execute it
     # We can probably optimize this or run it in background in a real app
     # For now, we just consume the generator
-    for _ in detection(session.get(video_path_key), session.get(points_key), session.get(frame_size_key), session.get(color_key), taskID):
+    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID):
         pass
         
     return redirect(url_for('result'))
@@ -85,22 +89,22 @@ def result():
 def get_coordinates():
     data = request.get_json()
     taskID =  session.get('taskID')
-    taskID =  session.get('taskID')
-    x, y = data.get('x'), data.get('y')
+    job = get_job(taskID)
+    if not job:
+        return jsonify({"message": "Job not found"}), 404
 
-    points_key = 'points_' + taskID
-    points = session.get(points_key, [])
+    x, y = data.get('x'), data.get('y')
+    points = job['points']
     points.append((x, y))
-    session[points_key] = points
+    update_job(taskID, points=points)
     return jsonify({"message": "Coordinates received successfully"})
 
 @app.route('/color_setting', methods=['POST'])
 def color_setting():
     data = request.json
     taskID =  session.get('taskID')
-    color_key = 'color_' + taskID
     color = (int(data['b']), int(data['g']), int(data['r']))
-    session[color_key] = color
+    update_job(taskID, color=color)
     return jsonify({"message": "Color settings updated successfully"})
 
 
@@ -108,8 +112,7 @@ def color_setting():
 @app.route('/clear', methods=['POST'])
 def clear_coordinates():
     taskID = session.get('taskID')
-    points_key = 'points_' + taskID
-    session[points_key] = []
+    update_job(taskID, points=[])
     return jsonify({"message": "Coordinates cleared successfully"})
     
 if __name__ == "__main__":

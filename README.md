@@ -55,6 +55,28 @@ This project uses `uv` for lightning-fast dependency management.
    - **Submit**: Click "Run" to start processing.
    - **Result**: Watch the processed video with real-time counting.
 
+## 🗄️ Database Management
+
+The project uses a SQLite database (`tasks.db`) to store job information securely. A utility script is provided to manage this data.
+
+### View Jobs
+List all jobs currently in the database:
+```bash
+uv run manage_db.py view
+```
+
+### Cleanup Files (Prune)
+Delete all **input videos** and **temporary frames**, keeping only the processed output videos to save space:
+```bash
+uv run manage_db.py prune
+```
+
+### Clear Database
+Delete **ALL data** (including output videos) and reset the database:
+```bash
+uv run manage_db.py clear
+```
+
 ## ⚙️ Configuration
 
 The current model is configured to detect **cattle/cows** (COCO Class ID `19`).

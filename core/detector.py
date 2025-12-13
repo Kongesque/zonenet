@@ -10,7 +10,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID):
     # Constants
     ClassID = [19]
     SOURCE_VIDEO = path_x
-    DESTIN_VIDEO = 'static/files/output/' + 'output_' + taskID + '.mp4'
+    DESTIN_VIDEO = 'uploads/outputs/' + 'output_' + taskID + '.mp4'
 
     font = cv2.FONT_ITALIC
     frame_counter = 0
