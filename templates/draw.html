@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Milk | Livestock Counting</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/draw.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+</head>
+
+<body>
+
+    <div id="loading">
+        <img src="">
+        <p></p>
+        <span></span>
+    </div>
+
+    <header class="disable" id="content"> <!-- Header | Header | Header | Header | Header | Header | Header -->
+        <a href="{{ url_for('main') }}">
+            <div class="logo-container" href="{{ url_for('main') }}">
+                <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="logo">
+                <div class="text">Livestock Counting</div>
+            </div>
+        </a>
+    </header>
+
+    <main id="content"> <!-- Main | Main | Main | Main | Main | Main | Main | Main | Main -->
+        <div class="container">
+            <section class="tools">
+                <div class="tool">
+                    <label class="head">Area Selection</label>
+                    <hr class="sep">
+                    <div class="group-tool">
+                        <div class="slider">
+                            <div class="point-info">
+                                <p class="name">Points</p>
+                                <p class="value">4</p>
+                            </div>
+                            <input type="range" value="4" min="3" max="8">
+                        </div>
+                        <hr>
+                        <div class="colors">
+                            <label class="title">Colors</label>
+                            <ul class="options">
+                                <li class="option"></li>
+                                <li class="option selected"></li>
+                                <li class="option"></li>
+                                <li class="option"></li>
+                                <li class="option"></li>
+                            </ul>
+                        </div>
+                        <hr>
+                        <button class="draw">Clear</button>
+                    </div>
+                </div>
+                <form action="{{ url_for('submit') }}" method="post">
+                    <div class="run disable">
+                        <button class="process" onclick="loading();">Process</button>
+                    </div>
+                </form>
+            </section>
+
+            <section class="board">
+                <img id="image" src="{{ url_for('static', filename='files/frame/' + 'frame_' + taskID + '.jpg') }}"
+                    hidden>
+                <canvas class="display" id="canvas"></canvas>
+            </section>
+        </div>
+    </main>
+
+    <footer id="content"> <!-- Footer | Footer | Footer | Footer | Footer | Footer | Footer -->
+        <div class="wh">
+            <p class="size-width">
+                <span class="name">Width: </span>
+                <span class="value"> - px</span>
+            </p>
+            <p class="size-height">
+                <span class="name">Height: </span>
+                <span class="value"> - px</span>
+            </p>
+        </div>
+    </footer>
+    <div id="responseMessage"></div>
+
+    <!-- script |  script |  script |  script |  script |  script |  script |  script -->
+    <script src="{{url_for('static', filename='script/draw.js')}}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script>
+
+
+        $(document).ready(function () {
+            $('#loading').hide();
+        });
+
+        function loading() {
+            $("header#content").hide();
+            $("main#content").hide();
+            $("footer#content").hide();
+            $("body").css("background-color", "#f8f8f8");
+            $("#loading").show();
+            $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
+            $("#loading p").text("Processing files...");
+            $("#loading span").html("The process may take a moment, please<br>keep this window open.");
+        };
+
+    </script>
+    </script>
+
+</body>
+
+</html>

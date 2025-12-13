@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# uv / Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# MacOS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Project Specific (Uploads & generated files)
+static/files/input/*
+static/files/frame/*
+!static/files/input/.gitkeep
+!static/files/frame/.gitkeep
+*.mp4
+!input.mp4

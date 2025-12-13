@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Milk | Livestock Counting</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/videoresult.css') }}">
+        <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    </head>
+    <body>
+
+        <div id="loading">
+            <img src="">
+            <p></p>
+            <span></span>
+        </div>
+
+        <header id="content"> <!-- Header | Header | Header | Header | Header | Header | Header -->
+            <a href="{{ url_for('main') }}">
+                <div class="logo-container" href="{{ url_for('main') }}" >
+                    <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="logo" class="logo">
+                    <div class="text">Livestock Counting</div>
+                </div>
+            </a>
+            <a href="{{ url_for('static', filename='files/output/' + 'output_' + taskID + '.mp4') }}" download>  
+                <button class="download">Download</button>
+            </a>
+        </header>
+        
+        <main id="content"> <!-- Main | Main | Main | Main | Main | Main | Main | Main | Main -->
+            <div class="container"> 
+                <video class="video" controls>
+                  <source src="{{ url_for('static', filename='files/output/' + 'output_' + taskID + '.mp4') }}" type="video/mp4">
+                </video>
+            </div>
+        </main>
+
+        <footer id="content"> <!-- Footer | Footer | Footer | Footer | Footer | Footer | Footer -->
+            <div class="wh">
+                <p class="size-width"> 
+                    <span class="name">Width: </span>
+                    <span class="value"> - px</span>
+                </p>
+                <p class="size-height">
+                    <span class="name">Height: </span>
+                    <span class="value"> - px</span>
+                </p>
+            </div>
+            <div class="load">
+                <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
+                  {{ form.hidden_tag() }}
+                  <div class="custom-file">
+                      {{ form.file(class_="custom-file-input", id="fileInput", accept="video/*") }}
+                      <label class="custom-file-label" for="customFile">New Upload file</label>
+                  </div>
+                  <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();" hidden>
+                </form>
+
+                <span>
+                    New upload
+                </span>
+                <button class="upload">
+                    <img src="{{ url_for('static', filename='img/upload.svg') }}" height="30" width="30" alt="">
+                </button>
+
+            </div>
+        </footer>
+
+        <script src="{{url_for('static', filename='script/result.js')}}"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script> 
+        <script>
+            var image = new Image(); 
+            image.src = "{{ url_for('static', filename='files/frame/' + 'frame_' + taskID + '.jpg') }}";
+            image.onload = function() {
+                document.querySelector(".size-width .value").textContent = this.naturalWidth + " px";
+                document.querySelector(".size-height .value").textContent = this.naturalHeight + " px";
+            };
+
+            $(document).ready(function(){
+                $('#loading').hide();
+            });
+
+            function loading() {
+                $("header#content").hide();    
+                $("main#content").hide();    
+                $("footer#content").hide();    
+                $("body").css("background-color", "#f8f8f8"); 
+                $("#loading").show(); 
+                $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
+                $("#loading p").text("Uploading files...");
+                $("#loading span").html("The process may take a moment, please<br>keep this window open.");
+            };
+        </script>
+    </body>
+</html>
