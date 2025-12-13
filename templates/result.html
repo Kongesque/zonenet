@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
+<body class="bg-bg-color text-text-color font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -17,18 +17,24 @@
         <span></span>
     </div>
 
-    <header id="content" class="flex justify-between items-center py-4 px-6 border-b border-gray-500">
+    <header id="content" class="flex justify-between items-center px-2 py-2">
         <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
+            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
-        <a href="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}" download>
-            <button class="btn-primary">Download</button>
-        </a>
+        <div class="flex items-center gap-2">
+            <a href="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}" download>
+                <button class="btn-secondary">Download</button>
+            </a>
+            <a href="https://github.com/Kongesque" target="_blank"
+                class="w-6 h-6 flex items-center justify-center rounded-full">
+                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert">
+            </a>
+        </div>
     </header>
 
     <main id="content" class="flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
         <div class="flex w-full h-full">
-            <video class="rounded-xl w-full object-contain bg-gray-600" controls>
+            <video class="rounded-xl w-full object-contain bg-btn-hover" controls>
                 <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                     type="video/mp4">
             </video>
@@ -40,11 +46,11 @@
         <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
             <p class="size-width">
                 <span>Width: </span>
-                <span class="value text-white"> - px</span>
+                <span class="value text-text-color"> - px</span>
             </p>
             <p class="size-height">
                 <span>Height: </span>
-                <span class="value text-white"> - px</span>
+                <span class="value text-text-color"> - px</span>
             </p>
         </div>
         <div class="flex items-center gap-3">

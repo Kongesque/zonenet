@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
+<body class="bg-bg-color text-text-color font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -17,21 +17,31 @@
         <span></span>
     </div>
 
-    <header id="content" class="flex justify-between items-center py-4 px-6 border-b border-gray-500">
+    <header id="content" class="flex justify-between items-center px-2 py-2">
         <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
+            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
-        <button class="btn-secondary">How to use</button>
+        <div class="flex items-center gap-2">
+            <button class="btn-secondary">How to use</button>
+            <a href="https://github.com/Kongesque" target="_blank"
+                class="w-6 h-6 flex items-center justify-center rounded-full">
+                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert opacity-80">
+            </a>
+        </div>
     </header>
 
-    <main id="content" class="flex-1 flex items-center justify-center flex-col text-center px-4 overflow-hidden">
-        <div class="mb-8 md:mb-12">
-            <h1 class="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">Counting Livestock<br>in
-                Just a Few
-                Clicks</h1>
-            <p class="text-sm md:text-base text-gray-300 mt-4">Count and monitor livestock with<br>exceptional accuracy
-                and
-                efficiency.</p>
+    <main id="content"
+        class="relative flex-1 flex items-center justify-center flex-col text-center mx-2 mb-2 mt-1 overflow-hidden bg-primary-color border border-primary-border rounded-md">
+
+        <!-- Sidebar Icon -->
+        <button class="absolute top-4 left-4 text-text-color">
+            <img src="{{ url_for('static', filename='img/sidebar.svg') }}" class="w-4.5 h-4.5 invert opacity-80">
+        </button>
+
+        <div class="mb-4">
+            <h1 class="text-3xl md:text-5xl font-bold text-text-color tracking-tight leading-tight">
+                What do you want to count?
+            </h1>
         </div>
 
         <div class="flex items-center justify-center px-4">
@@ -46,11 +56,11 @@
             </form>
 
             <label for="input-file" id="drop-area"
-                class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-gray-400 hover:border-white hover:bg-gray-600">
+                class="w-full max-w-[420px] p-8 md:p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-gray-400 hover:border-text-color hover:bg-btn-hover">
                 <div id="file-view" class="flex flex-col items-center gap-4 md:gap-6">
                     <div class="flex items-center gap-3">
                         <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-6 h-6 invert opacity-60">
-                        <span class="text-white font-medium">Choose Files</span>
+                        <span class="text-text-color font-medium">Choose Files</span>
                     </div>
                     <p class="text-sm text-gray-300">or drop it here</p>
                     <div class="flex items-center gap-3">
@@ -62,10 +72,6 @@
 
         </div>
     </main>
-
-    <footer id="content" class="flex justify-center items-center py-4 px-6 border-t border-gray-500">
-        <p class="text-gray-400 text-xs">NATIONAL DONG HWA UNIVERSITY</p>
-    </footer>
 
     <script src="{{url_for('static', filename='script/main.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>

@@ -9,7 +9,7 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-black text-white font-sans h-screen overflow-hidden flex flex-col">
+<body class="bg-bg-color text-text-color font-sans h-screen overflow-hidden flex flex-col">
 
     <div id="loading" class="loading-overlay">
         <img src="">
@@ -17,10 +17,17 @@
         <span></span>
     </div>
 
-    <header class="flex justify-between items-center py-4 px-6 border-b border-gray-500" id="content">
+    <header id="content" class="flex justify-between items-center px-2 py-2">
         <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
+            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
+        <div class="flex items-center gap-2">
+            <button class="btn-secondary">How to use</button>
+            <a href="https://github.com/Kongesque" target="_blank"
+                class="w-6 h-6 flex items-center justify-center rounded-full">
+                <img src="{{ url_for('static', filename='img/github.svg') }}" class="w-6 h-6 invert">
+            </a>
+        </div>
     </header>
 
     <main id="content" class="flex-1 flex items-center justify-center p-4 md:p-6 overflow-hidden">
@@ -30,14 +37,14 @@
             <section
                 class="card w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1">
                 <div>
-                    <h2 class="text-sm font-semibold text-white mb-4">Area Selection</h2>
+                    <h2 class="text-sm font-semibold text-text-color mb-4">Area Selection</h2>
 
                     <div class="space-y-4">
                         <!-- Points Slider -->
                         <div>
                             <div class="flex justify-between text-sm mb-2">
                                 <span class="text-gray-300">Points</span>
-                                <span class="value text-white font-medium">4</span>
+                                <span class="value text-text-color font-medium">4</span>
                             </div>
                             <input type="range" value="4" min="3" max="8"
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
@@ -53,7 +60,7 @@
                                     class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-red-500 opacity-60 hover:opacity-100">
                                 </li>
                                 <li
-                                    class="option selected w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-yellow-500 ring-2 ring-white ring-offset-2 ring-offset-gray-600">
+                                    class="option selected w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-yellow-500 ring-2 ring-text-color ring-offset-2 ring-offset-btn-hover">
                                 </li>
                                 <li
                                     class="option w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer bg-green-500 opacity-60 hover:opacity-100">
@@ -71,7 +78,7 @@
 
                         <!-- Clear Button -->
                         <button
-                            class="draw w-full py-2.5 md:py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-white hover:text-white transition-all">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
                     </div>
                 </div>
 
@@ -97,11 +104,11 @@
         <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
             <p class="size-width">
                 <span>Width: </span>
-                <span class="value text-white"> - px</span>
+                <span class="value text-text-color"> - px</span>
             </p>
             <p class="size-height">
                 <span>Height: </span>
-                <span class="value text-white"> - px</span>
+                <span class="value text-text-color"> - px</span>
             </p>
         </div>
     </footer>
