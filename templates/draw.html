@@ -5,91 +5,110 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZoneNet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/draw.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body>
+<body class="bg-black text-white font-sans">
 
-    <div id="loading">
+    <div id="loading" class="loading-overlay">
         <img src="">
         <p></p>
         <span></span>
     </div>
 
-    <header class="disable" id="content"> <!-- Header | Header | Header | Header | Header | Header | Header -->
-        <a href="{{ url_for('main') }}">
-            <div class="logo-container" href="{{ url_for('main') }}">
-                <div class="text" style="font-size: 24px; font-weight: bold; color: #F97300;">ZoneNet</div>
-            </div>
+    <header class="flex justify-between items-center py-4 px-6 border-b border-gray-500" id="content">
+        <a href="{{ url_for('main') }}" class="no-underline">
+            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
         </a>
     </header>
 
-    <main id="content"> <!-- Main | Main | Main | Main | Main | Main | Main | Main | Main -->
-        <div class="container">
-            <section class="tools">
-                <div class="tool">
-                    <label class="head">Area Selection</label>
-                    <hr class="sep">
-                    <div class="group-tool">
-                        <div class="slider">
-                            <div class="point-info">
-                                <p class="name">Points</p>
-                                <p class="value">4</p>
+    <main id="content" class="flex items-center justify-center p-6">
+        <div class="flex w-full gap-6 min-h-[calc(100vh-140px)]">
+
+            <!-- Tools Sidebar -->
+            <section class="card w-[280px] p-6 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-sm font-semibold text-white mb-4">Area Selection</h2>
+
+                    <div class="space-y-4">
+                        <!-- Points Slider -->
+                        <div>
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-300">Points</span>
+                                <span class="value text-white font-medium">4</span>
                             </div>
-                            <input type="range" value="4" min="3" max="8">
+                            <input type="range" value="4" min="3" max="8"
+                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
                         </div>
-                        <hr>
-                        <div class="colors">
-                            <label class="title">Colors</label>
-                            <ul class="options">
-                                <li class="option"></li>
-                                <li class="option selected"></li>
-                                <li class="option"></li>
-                                <li class="option"></li>
-                                <li class="option"></li>
+
+                        <hr class="border-gray-500">
+
+                        <!-- Colors -->
+                        <div>
+                            <label class="text-sm text-gray-300 block mb-2">Colors</label>
+                            <ul class="options flex gap-2">
+                                <li
+                                    class="option w-5 h-5 rounded-full cursor-pointer bg-red-500 opacity-60 hover:opacity-100">
+                                </li>
+                                <li
+                                    class="option selected w-5 h-5 rounded-full cursor-pointer bg-yellow-500 ring-2 ring-white ring-offset-2 ring-offset-gray-600">
+                                </li>
+                                <li
+                                    class="option w-5 h-5 rounded-full cursor-pointer bg-green-500 opacity-60 hover:opacity-100">
+                                </li>
+                                <li
+                                    class="option w-5 h-5 rounded-full cursor-pointer bg-blue-500 opacity-60 hover:opacity-100">
+                                </li>
+                                <li
+                                    class="option w-5 h-5 rounded-full cursor-pointer bg-purple-500 opacity-60 hover:opacity-100">
+                                </li>
                             </ul>
                         </div>
-                        <hr>
-                        <button class="draw">Clear</button>
+
+                        <hr class="border-gray-500">
+
+                        <!-- Clear Button -->
+                        <button
+                            class="draw w-full py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-white hover:text-white transition-all">Clear</button>
                     </div>
                 </div>
+
                 <form action="{{ url_for('submit') }}" method="post">
                     <div class="run disable">
-                        <button class="process" onclick="loading();">Process</button>
+                        <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
                 </form>
             </section>
 
-            <section class="board">
+            <!-- Canvas Area -->
+            <section class="flex-1 card flex items-center justify-center">
                 <img id="image" src="{{ url_for('media_file', filename='frames/' + 'frame_' + taskID + '.jpg') }}"
                     hidden>
-                <canvas class="display" id="canvas"></canvas>
+                <canvas class="display max-w-full max-h-[calc(100vh-180px)] rounded-lg" id="canvas"></canvas>
             </section>
         </div>
     </main>
 
-    <footer id="content"> <!-- Footer | Footer | Footer | Footer | Footer | Footer | Footer -->
-        <div class="wh">
+    <footer id="content" class="flex justify-between items-center py-4 px-6 border-t border-gray-500">
+        <div class="flex gap-6 text-sm text-gray-300">
             <p class="size-width">
-                <span class="name">Width: </span>
-                <span class="value"> - px</span>
+                <span>Width: </span>
+                <span class="value text-white"> - px</span>
             </p>
             <p class="size-height">
-                <span class="name">Height: </span>
-                <span class="value"> - px</span>
+                <span>Height: </span>
+                <span class="value text-white"> - px</span>
             </p>
         </div>
     </footer>
+
     <div id="responseMessage"></div>
 
-    <!-- script |  script |  script |  script |  script |  script |  script |  script -->
     <script src="{{url_for('static', filename='script/draw.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
     <script>
-
-
         $(document).ready(function () {
             $('#loading').hide();
         });
@@ -98,14 +117,11 @@
             $("header#content").hide();
             $("main#content").hide();
             $("footer#content").hide();
-            $("body").css("background-color", "#f8f8f8");
             $("#loading").show();
             $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
             $("#loading p").text("Processing files...");
             $("#loading span").html("The process may take a moment, please<br>keep this window open.");
         };
-
-    </script>
     </script>
 
 </body>

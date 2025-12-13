@@ -43,3 +43,5 @@ static/files/frame/*
 !static/files/frame/.gitkeep
 *.mp4
 !input.mp4
+
+/node_modules

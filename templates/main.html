@@ -5,34 +5,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZoneNet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body>
+<body class="bg-black text-white font-sans">
 
-    <div id="loading">
+    <div id="loading" class="loading-overlay">
         <img src="">
         <p></p>
         <span></span>
     </div>
 
-    <header id="content"> <!-- Header | Header | Header | Header | Header | Header | Header -->
-        <a href="{{ url_for('main') }}">
-            <div class="logo-container" href="{{ url_for('main') }}">
-                <div class="text" style="font-size: 24px; font-weight: bold; color: #F97300;">ZoneNet</div>
-            </div>
+    <header id="content" class="flex justify-between items-center py-4 px-6 border-b border-gray-500">
+        <a href="{{ url_for('main') }}" class="no-underline">
+            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
         </a>
-        <button class="howto">How to use</button>
+        <button class="btn-secondary">How to use</button>
     </header>
 
-    <main id="content"> <!-- Main | Main | Main | Main | Main | Main | Main | Main | Main -->
-        <span class="opening">
-            <h1>Counting Livestock<br>in Just a Few Clicks!</h1>
-            <p>Count and monitor livestock with<br>exceptional accuracy and efficiency.</p>
-        </span>
+    <main id="content" class="flex items-center justify-center flex-col text-center min-h-[calc(100vh-140px)]">
+        <div class="mb-12">
+            <h1 class="text-5xl font-bold text-white tracking-tight leading-tight">Counting Livestock<br>in Just a Few
+                Clicks</h1>
+            <p class="text-base text-gray-300 mt-4">Count and monitor livestock with<br>exceptional accuracy and
+                efficiency.</p>
+        </div>
 
-        <div class="hero">
+        <div class="flex items-center justify-center">
 
             <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
                 {{ form.hidden_tag() }}
@@ -43,31 +43,28 @@
                 <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();" hidden>
             </form>
 
-            <label for="input-file" id="drop-area">
-                <div id="file-view">
-                    <div class="choose-file">
-                        <span>Choose Files</span>
-                        <img src="{{ url_for('static', filename='img/upload.svg') }}">
+            <label for="input-file" id="drop-area"
+                class="w-[420px] p-10 text-center rounded-xl cursor-pointer transition-all duration-200 border border-dashed border-gray-400 hover:border-white hover:bg-gray-600">
+                <div id="file-view" class="flex flex-col items-center gap-6">
+                    <div class="flex items-center gap-3">
+                        <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-6 h-6 invert opacity-60">
+                        <span class="text-white font-medium">Choose Files</span>
                     </div>
-                    <p>or drop it here</p>
-                    <div class="acceptf">
-                        <div class="accept">
-                            <img src="{{ url_for('static', filename='img/vdo.svg') }}">
-                            <span>.MP4</span>
-                        </div>
-                        <div class="accept">
-                            <img src="{{ url_for('static', filename='img/vdo.svg') }}">
-                            <span>.WebM</span>
-                        </div>
+                    <p class="text-sm text-gray-300">or drop it here</p>
+                    <div class="flex items-center gap-3">
+                        <span class="px-3 py-1 text-xs text-gray-300 border border-gray-400 rounded-full">.MP4</span>
+                        <span class="px-3 py-1 text-xs text-gray-300 border border-gray-400 rounded-full">.WebM</span>
                     </div>
                 </div>
             </label>
 
         </div>
     </main>
-    <footer id="content">
-        <p>NATIONAL DONG WHA UNIVERSITY</p>
+
+    <footer id="content" class="flex justify-center items-center py-4 px-6 border-t border-gray-500">
+        <p class="text-gray-400 text-xs">NATIONAL DONG HWA UNIVERSITY</p>
     </footer>
+
     <script src="{{url_for('static', filename='script/main.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
@@ -79,7 +76,6 @@
             $("header#content").hide();
             $("main#content").hide();
             $("footer#content").hide();
-            $("body").css("background-color", "#f8f8f8");
             $("#loading").show();
             $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
             $("#loading p").text("Uploading files...");

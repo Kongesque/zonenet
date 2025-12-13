@@ -5,50 +5,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZoneNet</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/videoresult.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body>
+<body class="bg-black text-white font-sans">
 
-    <div id="loading">
+    <div id="loading" class="loading-overlay">
         <img src="">
         <p></p>
         <span></span>
     </div>
 
-    <header id="content"> <!-- Header | Header | Header | Header | Header | Header | Header -->
-        <a href="{{ url_for('main') }}">
-            <div class="logo-container" href="{{ url_for('main') }}">
-                <div class="text" style="font-size: 24px; font-weight: bold; color: #F97300;">ZoneNet</div>
-            </div>
+    <header id="content" class="flex justify-between items-center py-4 px-6 border-b border-gray-500">
+        <a href="{{ url_for('main') }}" class="no-underline">
+            <div class="text-lg font-semibold text-white tracking-tight">ZoneNet</div>
         </a>
         <a href="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}" download>
-            <button class="download">Download</button>
+            <button class="btn-primary">Download</button>
         </a>
     </header>
 
-    <main id="content"> <!-- Main | Main | Main | Main | Main | Main | Main | Main | Main -->
-        <div class="container">
-            <video class="video" controls>
+    <main id="content" class="flex items-center justify-center p-6">
+        <div class="flex w-full h-[calc(100vh-140px)]">
+            <video class="rounded-xl w-full object-contain bg-gray-600" controls>
                 <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
                     type="video/mp4">
             </video>
         </div>
     </main>
 
-    <footer id="content"> <!-- Footer | Footer | Footer | Footer | Footer | Footer | Footer -->
-        <div class="wh">
+    <footer id="content" class="flex justify-between items-center py-4 px-6 border-t border-gray-500">
+        <div class="flex gap-6 text-sm text-gray-300">
             <p class="size-width">
-                <span class="name">Width: </span>
-                <span class="value"> - px</span>
+                <span>Width: </span>
+                <span class="value text-white"> - px</span>
             </p>
             <p class="size-height">
-                <span class="name">Height: </span>
-                <span class="value"> - px</span>
+                <span>Height: </span>
+                <span class="value text-white"> - px</span>
             </p>
         </div>
-        <div class="load">
+        <div class="flex items-center gap-3">
             <form id="uploadForm" method='POST' enctype="multipart/form-data" hidden>
                 {{ form.hidden_tag() }}
                 <div class="custom-file">
@@ -58,13 +56,11 @@
                 <input id="dummy" type="submit" name="anything_submit" value="Submit" onclick="loading();" hidden>
             </form>
 
-            <span>
-                New upload
-            </span>
-            <button class="upload">
-                <img src="{{ url_for('static', filename='img/upload.svg') }}" height="30" width="30" alt="">
+            <span class="text-sm text-gray-300">New upload</span>
+            <button
+                class="upload w-10 h-10 flex items-center justify-center bg-white rounded-lg hover:bg-gray-200 transition-all">
+                <img src="{{ url_for('static', filename='img/upload.svg') }}" class="w-5 h-5">
             </button>
-
         </div>
     </footer>
 
@@ -86,7 +82,6 @@
             $("header#content").hide();
             $("main#content").hide();
             $("footer#content").hide();
-            $("body").css("background-color", "#f8f8f8");
             $("#loading").show();
             $("#loading img").attr("src", "{{ url_for('static', filename='img/cow.gif') }}");
             $("#loading p").text("Uploading files...");

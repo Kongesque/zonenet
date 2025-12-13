@@ -16,11 +16,12 @@ A powerful web application leveraging **YOLO11** and **Flask** for accurate, rea
 
 - **Backend**: Python, Flask
 - **Computer Vision**: OpenCV, Ultralytics YOLO11
-- **Package Management**: [uv](https://github.com/astral-sh/uv)
+- **Frontend**: Tailwind CSS v4
+- **Package Management**: [uv](https://github.com/astral-sh/uv) (Python), npm (CSS)
 
 ## 📦 Installation
 
-This project uses `uv` for lightning-fast dependency management.
+This project uses `uv` for lightning-fast Python dependency management and `npm` for Tailwind CSS.
 
 1. **Clone the repository:**
    ```bash
@@ -34,10 +35,17 @@ This project uses `uv` for lightning-fast dependency management.
    ```
    *For other installation methods (pip, etc.), refer to the [uv documentation](https://docs.astral.sh/uv/getting-started/installation/).*
 
-3. **Install dependencies:**
+3. **Install Python dependencies:**
    ```bash
    uv sync
    ```
+
+4. **Install CSS dependencies & build:**
+   ```bash
+   npm install
+   npm run build
+   ```
+
 
 ## 🎮 Usage
 
