@@ -22,7 +22,7 @@
         onclick="toggleSidebar()"></div>
 
     <!-- Header (outside app-container so sidebar doesn't push it) -->
-    <header id="content" class="flex justify-between items-center py-2 pl-3 pr-2">
+    <header id="content" class="flex justify-between items-center py-2 px-3">
         <a href="{{ url_for('main') }}" class="no-underline">
             <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
         </a>
@@ -124,58 +124,8 @@
 
     <script src="{{url_for('static', filename='script/main.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='script/sidebar.js')}}"></script>
     <script>
-        // Sidebar state
-        let sidebarExpanded = false;
-
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('backdrop');
-            const isMobile = window.innerWidth < 1024;
-
-            sidebarExpanded = !sidebarExpanded;
-            sidebar.dataset.expanded = sidebarExpanded;
-
-            if (isMobile) {
-                // Mobile: slide in/out overlay
-                if (sidebarExpanded) {
-                    sidebar.classList.remove('-translate-x-full');
-                    sidebar.classList.add('translate-x-0');
-                    backdrop.classList.remove('hidden');
-                } else {
-                    sidebar.classList.remove('translate-x-0');
-                    sidebar.classList.add('-translate-x-full');
-                    backdrop.classList.add('hidden');
-                }
-            } else {
-                // Desktop: push sidebar width toggle (only affects main content)
-                if (sidebarExpanded) {
-                    sidebar.classList.remove('lg:w-0');
-                    sidebar.classList.add('lg:w-60');
-                } else {
-                    sidebar.classList.remove('lg:w-60');
-                    sidebar.classList.add('lg:w-0');
-                }
-            }
-        }
-
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            const sidebar = document.getElementById('sidebar');
-            const backdrop = document.getElementById('backdrop');
-            const isMobile = window.innerWidth < 1024;
-
-            if (!isMobile && sidebarExpanded) {
-                // Reset mobile states when switching to desktop
-                sidebar.classList.remove('-translate-x-full');
-                sidebar.classList.add('translate-x-0');
-                backdrop.classList.add('hidden');
-            } else if (isMobile && !sidebarExpanded) {
-                // Hide sidebar on mobile when collapsed
-                sidebar.classList.add('-translate-x-full');
-                sidebar.classList.remove('translate-x-0');
-            }
-        });
 
         $(document).ready(function () {
             $('#loading').hide();
