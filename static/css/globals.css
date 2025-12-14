@@ -47,6 +47,11 @@
     --font-family-sans: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+@utility drag-active {
+    background-color: var(--color-sidebar-item-hover) !important;
+    border-color: var(--color-dropzone-accent) !important;
+}
+
 @layer base {
     * {
         box-sizing: border-box;
