@@ -5,7 +5,7 @@ from ultralytics import YOLO
 import time
 import numpy as np
 
-def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19):
+def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf=40):
 
     # Constants
     ClassID = [target_class]
@@ -53,7 +53,9 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19):
             continue
 
 
-        results = model.track(frame, classes=ClassID, persist=True, save=False, tracker="bytetrack.yaml")
+        # Normalize confidence to 0.0-1.0 range
+        conf_float = conf / 100.0
+        results = model.track(frame, classes=ClassID, persist=True, save=False, tracker="bytetrack.yaml", conf=conf_float)
         boxes = results[0].boxes.xywh.cpu()
         track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes is not None and results[0].boxes.id is not None else []
 

@@ -77,14 +77,20 @@ def submit():
     except ValueError:
         target_class = 19
 
-    update_job(taskID, target_class=target_class)
+    # Get confidence from form
+    try:
+        confidence = int(request.form.get('confidence', 40))
+    except ValueError:
+        confidence = 40
+
+    update_job(taskID, target_class=target_class, confidence=confidence)
     
     # Process the video
     # Note: detection is a generator, so we need to iterate to execute it
     # We can probably optimize this or run it in background in a real app
     # For now, we just consume the generator
     start_time = time.time()
-    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID, target_class):
+    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID, target_class, confidence):
         pass
     end_time = time.time()
     process_time = round(end_time - start_time, 2)

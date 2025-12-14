@@ -9,13 +9,13 @@
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
 </head>
 
-<body class="bg-bg-color text-text-color font-sans h-screen overflow-hidden flex flex-col">
+<body class="bg-background text-text-color font-sans h-screen overflow-hidden flex flex-col">
 
 
 
-    <header id="content" class="flex justify-between items-center px-2 py-2">
+    <header id="content" class="flex justify-between items-center py-2.5 px-3">
         <a href="{{ url_for('main') }}" class="no-underline">
-            <div class="text-lg font-semibold text-text-color tracking-tight">ZoneNet</div>
+            <div class="text-lg font-semibold text-text-color tracking-tight font-mono">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
 
@@ -28,7 +28,7 @@
 
             <!-- Tools Sidebar -->
             <section
-                class="card w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1">
+                class="w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
                 <div>
                     <h2 class="text-sm font-semibold text-text-color mb-4">Area Selection</h2>
 
@@ -36,10 +36,10 @@
                         <!-- Object Class Selector -->
                         <div class="object-class">
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-gray-300">Target Object</span>
+                                <span class="text-muted-foreground">Target Object</span>
                             </div>
                             <select id="classSelector"
-                                class="w-full bg-[#1a1a1a] text-text-color border border-gray-600 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none">
+                                class="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none">
                                 {% for id, name in coco_classes|dictsort(false, 'value') %}
                                 <option value="{{ id }}" {% if id==19 %}selected{% endif %}>{{ name|capitalize }}
                                 </option>
@@ -47,21 +47,31 @@
                             </select>
                         </div>
 
+                        <!-- Confidence Slider -->
+                        <div class="slider-confidence">
+                            <div class="confidence-info flex justify-between text-sm mb-2">
+                                <span class="text-muted-foreground">Confidence Threshold</span>
+                                <span class="value-confidence text-text-color font-medium">40%</span>
+                            </div>
+                            <input type="range" id="confidenceSlider" value="40" min="1" max="100"
+                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
+                        </div>
+
                         <!-- Points Slider -->
                         <div class="slider">
                             <div class="point-info flex justify-between text-sm mb-2">
-                                <span class="text-gray-300">Points</span>
+                                <span class="text-muted-foreground">Points</span>
                                 <span class="value text-text-color font-medium">4</span>
                             </div>
                             <input type="range" value="4" min="3" max="8"
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-white">
                         </div>
 
-                        <hr class="border-gray-500">
+                        <hr class="border-primary-border">
 
                         <!-- Colors -->
                         <div class="colors">
-                            <label class="text-sm text-gray-300 block mb-2">Colors</label>
+                            <label class="text-sm text-muted-foreground block mb-2">Colors</label>
                             <ul class="options flex flex-wrap gap-2">
                                 <li class="option bg-red-500" data-color="239,68,68"></li>
                                 <li class="option selected bg-yellow-500" data-color="234,179,8"></li>
@@ -71,16 +81,17 @@
                             </ul>
                         </div>
 
-                        <hr class="border-gray-500">
+                        <hr class="border-primary-border">
 
                         <!-- Clear Button -->
                         <button
-                            class="draw w-full py-2.5 md:py-2 text-sm text-gray-300 border border-dashed border-gray-400 rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-muted-foreground border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
                     </div>
                 </div>
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
                     <input type="hidden" name="target_class" id="targetClassInput" value="19">
+                    <input type="hidden" name="confidence" id="confidenceInput" value="40">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -89,7 +100,7 @@
 
             <!-- Canvas Area -->
             <section
-                class="flex-1 card flex items-center justify-center p-2 md:p-4 order-1 md:order-2 min-h-0 overflow-hidden">
+                class="flex-1 flex items-center justify-center p-2 md:p-4 order-1 md:order-2 min-h-0 overflow-hidden bg-primary-color border border-primary-border rounded-xl">
                 <img id="image" src="{{ url_for('media_file', filename='frames/' + 'frame_' + taskID + '.jpg') }}"
                     hidden>
                 <canvas class="display max-w-full max-h-full rounded-lg" id="canvas"></canvas>
@@ -98,8 +109,8 @@
     </main>
 
     <footer id="content"
-        class="flex flex-col md:flex-row justify-between items-center gap-2 py-4 px-4 md:px-6 border-t border-gray-500">
-        <div class="flex gap-4 md:gap-6 text-sm text-gray-300">
+        class="flex flex-col md:flex-row justify-between items-center gap-2 py-4 px-4 md:px-6 border-t border-primary-border">
+        <div class="flex gap-4 md:gap-6 text-sm text-muted-foreground">
             <p class="size-width">
                 <span>Width: </span>
                 <span class="value text-text-color"> - px</span>
@@ -113,14 +124,13 @@
 
 
     <!-- Loading Screen -->
-    <div id="loading"
-        class="hidden fixed inset-0 z-50 bg-bg-color flex flex-col items-center justify-center h-screen w-screen">
+    <div id="loading" class="loading-overlay hidden">
 
         <p class="text-xl font-semibold text-text-color mb-2 text-center"></p>
         <span class="text-sm text-gray-400 text-center leading-relaxed mb-6"></span>
 
         <!-- Progress Bar -->
-        <div class="w-64 h-2 bg-gray-700 rounded-full overflow-hidden">
+        <div class="w-64 h-2 bg-gray-700 rounded-full overflow-hidden mt-4">
             <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
                 style="width: 0%"></div>
         </div>
@@ -172,6 +182,18 @@
         if (classSelector && targetClassInput) {
             classSelector.addEventListener('change', (e) => {
                 targetClassInput.value = e.target.value;
+            });
+        }
+
+        // Handle Confidence Slider
+        const confidenceSlider = document.getElementById('confidenceSlider');
+        const confidenceInput = document.getElementById('confidenceInput');
+        const confidenceValue = document.querySelector('.value-confidence');
+
+        if (confidenceSlider && confidenceInput && confidenceValue) {
+            confidenceSlider.addEventListener('input', (e) => {
+                confidenceValue.innerText = `${e.target.value}%`;
+                confidenceInput.value = e.target.value;
             });
         }
     </script>

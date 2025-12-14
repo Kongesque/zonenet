@@ -50,16 +50,22 @@ def init_db():
     except sqlite3.OperationalError:
         # Column likely already exists
         pass
+
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN confidence INTEGER DEFAULT 40')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
         
     conn.commit()
     conn.close()
 
 def create_job(task_id, filename, video_path):
     conn = get_db()
-    # Default name to filename, status to pending, target_class to 19 (cow)
+    # Default name to filename, status to pending, target_class to 19 (cow), confidence to 40
     conn.execute(
-        'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending', 19)
+        'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class, confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending', 19, 40)
     )
     conn.commit()
     conn.close()
@@ -84,6 +90,10 @@ def get_job(task_id):
         # Ensure target_class is present (for old records)
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
             job_dict['target_class'] = 19
+            
+        # Ensure confidence is present (for old records)
+        if 'confidence' not in job_dict or job_dict['confidence'] is None:
+            job_dict['confidence'] = 25
              
         return job_dict
     return None
