@@ -13,8 +13,7 @@
     --color-text-color: #EDEDED;
     --color-primary-color: #0A0A0A;
 
-    --color-gray-100: #FAFAFA;
-    --color-gray-200: #E5E5E5;
+
     --color-gray-300: #A1A1A1;
     --color-gray-400: #666666;
 
@@ -31,11 +30,9 @@
     --color-bg-color: #000000;
 
     /* Sidebar semantic tokens */
-    --color-sidebar: #0A0A0A;
-    --color-sidebar-border: #272727;
     --color-sidebar-foreground: #EDEDED;
     --color-sidebar-accent: #1A1A1A;
-    --color-sidebar-accent-foreground: #FFFFFF;
+
     --color-sidebar-item-hover: #252525;
     --color-sidebar-menu-hover: #454545;
     --color-delete-text: #DA3136;
@@ -101,5 +98,13 @@
 
     .card {
         @apply bg-btn-hover border border-gray-500 rounded-xl;
+    }
+
+    .option {
+        @apply w-6 h-6 md:w-5 md:h-5 rounded-full cursor-pointer transition-all duration-200 opacity-60 hover:opacity-100;
+    }
+
+    .option.selected {
+        @apply opacity-100 ring-2 ring-text-color ring-offset-2 ring-offset-btn-hover;
     }
 }
