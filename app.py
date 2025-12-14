@@ -43,12 +43,18 @@ def media_file(filename):
 def main():
     form = UploadFileForm()
     if request.method == 'POST' and form.validate_on_submit():
-        handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
-        return redirect(url_for('draw'))
+        taskID = handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
+        return redirect(url_for('draw', taskID=taskID))
     return render_template('main.html', form=form)
     
 @app.route('/draw', methods=['GET', 'POST'])
 def draw():
+    req_taskID = request.args.get('taskID')
+    if req_taskID:
+        job = get_job(req_taskID)
+        if job:
+            session['taskID'] = req_taskID
+
     taskID = session.get('taskID')
     if not taskID:
         return redirect(url_for('main'))
@@ -110,7 +116,7 @@ def submit():
         except OSError:
             pass
 
-    return redirect(url_for('result'))
+    return redirect(url_for('result', taskID=taskID))
 
 @app.route('/result', methods=['GET', 'POST']) 
 def result():
@@ -131,8 +137,8 @@ def result():
         
     form = UploadFileForm()
     if request.method == 'POST' and form.validate_on_submit():
-        handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
-        return redirect(url_for('draw'))
+        taskID = handle_upload(form.file.data, app.config['UPLOAD_FOLDER'])
+        return redirect(url_for('draw', taskID=taskID))
         
     job = get_job(taskID)
     if not job:
