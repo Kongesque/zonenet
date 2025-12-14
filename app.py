@@ -7,11 +7,12 @@ import time
 from core.detector import detection
 from utils.file_handler import handle_upload
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
+from utils.coco_classes import COCO_CLASSES
 
 init_db()
 
 app = Flask(__name__)  
-app.config['SECRET_KEY'] = 'kongesque'  
+app.config['SECRET_KEY'] = 'kongesque'
 app.config['UPLOAD_FOLDER'] = 'uploads/videos'  
 
 # Ensure directories exist
@@ -57,7 +58,7 @@ def draw():
          return redirect(url_for('main'))
          
     if job.get('frame_path'):
-         return render_template('draw.html', taskID=taskID)
+         return render_template('draw.html', taskID=taskID, coco_classes=COCO_CLASSES)
     return redirect(url_for('main'))
 
 @app.route('/submit', methods=['POST'])
@@ -70,12 +71,20 @@ def submit():
     if not job:
         return redirect(url_for('main'))
     
+    # Get target class from form
+    try:
+        target_class = int(request.form.get('target_class', 19))
+    except ValueError:
+        target_class = 19
+
+    update_job(taskID, target_class=target_class)
+    
     # Process the video
     # Note: detection is a generator, so we need to iterate to execute it
     # We can probably optimize this or run it in background in a real app
     # For now, we just consume the generator
     start_time = time.time()
-    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID):
+    for _ in detection(job['video_path'], job['points'], (job['frame_width'], job['frame_height']), job['color'], taskID, target_class):
         pass
     end_time = time.time()
     process_time = round(end_time - start_time, 2)

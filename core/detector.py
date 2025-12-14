@@ -5,10 +5,10 @@ from ultralytics import YOLO
 import time
 import numpy as np
 
-def detection(path_x, Area, frame_size, areaColor, taskID):
+def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19):
 
     # Constants
-    ClassID = [19]
+    ClassID = [target_class]
     SOURCE_VIDEO = path_x
     DESTIN_VIDEO = 'uploads/outputs/' + 'output_' + taskID + '.mp4'
 

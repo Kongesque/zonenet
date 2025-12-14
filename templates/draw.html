@@ -33,6 +33,20 @@
                     <h2 class="text-sm font-semibold text-text-color mb-4">Area Selection</h2>
 
                     <div class="space-y-4">
+                        <!-- Object Class Selector -->
+                        <div class="object-class">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="text-gray-300">Target Object</span>
+                            </div>
+                            <select id="classSelector"
+                                class="w-full bg-[#1a1a1a] text-text-color border border-gray-600 rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none">
+                                {% for id, name in coco_classes|dictsort(false, 'value') %}
+                                <option value="{{ id }}" {% if id==19 %}selected{% endif %}>{{ name|capitalize }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
                         <!-- Points Slider -->
                         <div class="slider">
                             <div class="point-info flex justify-between text-sm mb-2">
@@ -66,6 +80,7 @@
                 </div>
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
+                    <input type="hidden" name="target_class" id="targetClassInput" value="19">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -149,6 +164,16 @@
                 text.innerText = Math.round(progress) + '%';
             }, 500);
         };
+
+        // Handle Class Selection
+        const classSelector = document.getElementById('classSelector');
+        const targetClassInput = document.getElementById('targetClassInput');
+
+        if (classSelector && targetClassInput) {
+            classSelector.addEventListener('change', (e) => {
+                targetClassInput.value = e.target.value;
+            });
+        }
     </script>
 
 </body>

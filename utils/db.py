@@ -44,16 +44,22 @@ def init_db():
     except sqlite3.OperationalError:
         # Column likely already exists
         pass
+
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN target_class INTEGER DEFAULT 19')
+    except sqlite3.OperationalError:
+        # Column likely already exists
+        pass
         
     conn.commit()
     conn.close()
 
 def create_job(task_id, filename, video_path):
     conn = get_db()
-    # Default name to filename, status to pending
+    # Default name to filename, status to pending, target_class to 19 (cow)
     conn.execute(
-        'INSERT INTO jobs (id, name, filename, video_path, points, color, status) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending')
+        'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending', 19)
     )
     conn.commit()
     conn.close()
@@ -68,12 +74,16 @@ def get_job(task_id):
         try:
             job_dict['points'] = json.loads(job_dict['points'])
         except:
-             job_dict['points'] = []
+            job_dict['points'] = []
              
         try:
              job_dict['color'] = json.loads(job_dict['color'])
         except:
              job_dict['color'] = [5, 189, 251]
+             
+        # Ensure target_class is present (for old records)
+        if 'target_class' not in job_dict or job_dict['target_class'] is None:
+            job_dict['target_class'] = 19
              
         return job_dict
     return None
