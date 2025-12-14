@@ -1,5 +1,52 @@
 {% extends 'base.html' %}
 
+{% block sidebar %}
+<!-- Mobile Backdrop -->
+<div id="backdrop" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden lg:hidden" onclick="toggleSidebar()">
+</div>
+
+<!-- Sidebar -->
+<aside id="sidebar"
+    class="fixed lg:relative z-50 h-full bg-background flex flex-col overflow-hidden transition-all duration-300 ease-in-out -translate-x-full lg:translate-x-0 w-60 lg:w-0"
+    data-expanded="false">
+
+    <!-- Sidebar Content -->
+    <nav class="flex-1 p-2 space-y-1 overflow-y-auto overflow-x-hidden w-60">
+        <!-- Section Header -->
+        <div class="px-2 py-2">
+            <span class="text-sm font-medium text-sidebar-foreground whitespace-nowrap">History</span>
+        </div>
+
+        <!-- Navigation Items -->
+        {% if history_jobs %}
+        {% for job in history_jobs %}
+        <div class="group relative flex items-center rounded-md hover:bg-sidebar-item-hover pr-2
+            {% if current_taskID == job.id %}bg-sidebar-accent text-sidebar-foreground{% endif %}">
+            <a href="{{ url_for('result', taskID=job.id) }}" id="title-{{ job.id }}"
+                class="flex-1 block px-2 py-2 text-sm whitespace-nowrap overflow-hidden text-ellipsis
+                    {% if current_taskID == job.id %}font-medium{% else %}text-muted-foreground hover:text-sidebar-foreground{% endif %}">
+                {{ job.name or job.filename or 'Untitled' }}
+            </a>
+
+            <!-- 3-dot Menu Trigger -->
+            <button id="menu-btn-{{ job.id }}" onclick="toggleMenu(event, '{{ job.id }}')"
+                class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-menu-hover text-muted-foreground transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+            </button>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="px-2 py-2 text-xs text-muted-foreground italic">No history yet</div>
+        {% endif %}
+    </nav>
+</aside>
+{% endblock %}
+
 {% block content %}
 <!-- Main Content -->
 <main id="content"

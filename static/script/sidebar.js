@@ -4,6 +4,10 @@ let sidebarExpanded = false;
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('backdrop');
+    
+    // Safety check if sidebar doesn't exist on this page
+    if (!sidebar || !backdrop) return;
+
     const isMobile = window.innerWidth < 1024;
 
     sidebarExpanded = !sidebarExpanded;
@@ -36,6 +40,10 @@ function toggleSidebar() {
 window.addEventListener('resize', () => {
     const sidebar = document.getElementById('sidebar');
     const backdrop = document.getElementById('backdrop');
+    
+    // Safety check
+    if (!sidebar || !backdrop) return;
+
     const isMobile = window.innerWidth < 1024;
 
     if (!isMobile && sidebarExpanded) {
