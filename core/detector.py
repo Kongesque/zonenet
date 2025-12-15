@@ -41,6 +41,8 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
 
     start_time = time.time()
 
+    area_np = np.array(Area, np.int32)
+
     while cap.isOpened():
         success, frame = cap.read()
         
@@ -67,7 +69,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         for box, track_id in zip(boxes, track_ids):
             x, y, w, h = box
             center_x, center_y = int(x), int(y)
-            results = cv2.pointPolygonTest(np.array(Area, np.int32), ((center_x, center_y)), False)
+            results = cv2.pointPolygonTest(area_np, ((center_x, center_y)), False)
             
             track = track_history[track_id]
             track.append((float(x), float(y)))
@@ -86,7 +88,7 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
                 else:
                     cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
 
-        cv2.polylines(frame, [np.array(Area, np.int32)], True, areaColor, 3)
+        cv2.polylines(frame, [area_np], True, areaColor, 3)
         
         count_text = f"Count: {len(crossed_objects)}"
 
@@ -107,4 +109,3 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
     end_time = time.time()
     process_time = end_time - start_time
     print("Processing time:", process_time, "seconds")
-

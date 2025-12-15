@@ -36,7 +36,7 @@
                         <!-- Object Class Selector -->
                         <div class="object-class">
                             <div class="flex justify-between text-sm mb-2">
-                                <span class="text-muted-foreground">Target Object</span>
+                                <span class="text-secondary-text">Target Object</span>
                             </div>
                             <select id="classSelector"
                                 class="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none">
@@ -50,7 +50,7 @@
                         <!-- Confidence Slider -->
                         <div class="slider-confidence">
                             <div class="confidence-info flex justify-between text-sm mb-2">
-                                <span class="text-muted-foreground">Confidence Threshold</span>
+                                <span class="text-secondary-text">Confidence Threshold</span>
                                 <span class="value-confidence text-text-color font-medium">40%</span>
                             </div>
                             <input type="range" id="confidenceSlider" value="40" min="1" max="100"
@@ -60,7 +60,7 @@
                         <!-- Points Slider -->
                         <div class="slider">
                             <div class="point-info flex justify-between text-sm mb-2">
-                                <span class="text-muted-foreground">Points</span>
+                                <span class="text-secondary-text">Points</span>
                                 <span class="value text-text-color font-medium">4</span>
                             </div>
                             <input type="range" value="4" min="3" max="8"
@@ -71,7 +71,7 @@
 
                         <!-- Colors -->
                         <div class="colors">
-                            <label class="text-sm text-muted-foreground block mb-2">Colors</label>
+                            <label class="text-sm text-secondary-text block mb-2">Colors</label>
                             <ul class="options flex flex-wrap gap-2">
                                 <li class="option bg-red-500" data-color="239,68,68"></li>
                                 <li class="option selected bg-yellow-500" data-color="234,179,8"></li>
@@ -85,7 +85,7 @@
 
                         <!-- Clear Button -->
                         <button
-                            class="draw w-full py-2.5 md:py-2 text-sm text-muted-foreground border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all">Clear</button>
                     </div>
                 </div>
 
@@ -110,7 +110,7 @@
 
     <footer id="content"
         class="flex flex-col md:flex-row justify-between items-center gap-2 py-4 px-4 md:px-6 border-t border-primary-border">
-        <div class="flex gap-4 md:gap-6 text-sm text-muted-foreground">
+        <div class="flex gap-4 md:gap-6 text-sm text-secondary-text">
             <p class="size-width">
                 <span>Width: </span>
                 <span class="value text-text-color"> - px</span>
@@ -125,16 +125,34 @@
 
     <!-- Loading Screen -->
     <div id="loading" class="loading-overlay hidden">
+        <div class="flex flex-col items-center justify-center gap-2">
 
-        <p class="text-xl font-semibold text-text-color mb-2 text-center"></p>
-        <span class="text-sm text-gray-400 text-center leading-relaxed mb-6"></span>
+            <!-- Circular Progress -->
+            <div class="relative w-24 h-24">
+                <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                    <!-- Background circle -->
+                    <circle class="stroke-gray-400/20" cx="50" cy="50" r="42" fill="none" stroke-width="6"></circle>
+                    <!-- Progress circle (circumference = 2 * π * 42 ≈ 264) -->
+                    <circle id="progressCircle" class="stroke-text-color transition-all duration-300" cx="50" cy="50"
+                        r="42" fill="none" stroke-width="6" stroke-linecap="round" stroke-dasharray="264"
+                        stroke-dashoffset="264"></circle>
+                </svg>
+                <!-- Percentage text in center -->
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span id="progressText"
+                        class="text-xl font-medium text-text-color tabular-nums -translate-y-px">0</span>
+                </div>
+            </div>
 
-        <!-- Progress Bar -->
-        <div class="w-64 h-2 bg-gray-700 rounded-full overflow-hidden mt-4">
-            <div id="progressBar" class="h-full bg-blue-500 rounded-full transition-all duration-300 ease-out"
-                style="width: 0%"></div>
+            <!-- Text Content -->
+            <div class="flex flex-col items-center gap-1">
+                <p class="text-lg font-medium text-text-color">
+                    Processing video<span class="animate-pulse">...</span>
+                </p>
+                <span class="text-base text-secondary-text">Analyzing frames and detecting objects</span>
+            </div>
+
         </div>
-        <p id="progressText" class="text-xs text-gray-500 mt-2">0%</p>
     </div>
 
     <div id="responseMessage"></div>
@@ -152,13 +170,13 @@
             $("footer#content").hide();
             $("#loading").removeClass("hidden").css("display", "flex");
 
-            $("#loading p").text("Processing files...");
-            $("#loading span").html("The process may take a moment, please<br>keep this window open.");
+            // Text is now static in HTML, no need to set dynamically
 
-            // Progress Bar Animation
+            // Circular Progress Animation
             let progress = 0;
-            const bar = document.getElementById('progressBar');
+            const circle = document.getElementById('progressCircle');
             const text = document.getElementById('progressText');
+            const circumference = 264; // 2 * π * 42
 
             const interval = setInterval(() => {
                 // Simulate progress with random increments
@@ -170,8 +188,10 @@
                     clearInterval(interval);
                 }
 
-                bar.style.width = progress + '%';
-                text.innerText = Math.round(progress) + '%';
+                // Update circle (offset goes from 264 to 0)
+                const offset = circumference - (progress / 100) * circumference;
+                circle.style.strokeDashoffset = offset;
+                text.innerText = Math.round(progress);
             }, 500);
         };
 

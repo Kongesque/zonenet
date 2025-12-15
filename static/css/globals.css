@@ -37,6 +37,7 @@
     --color-sidebar-menu-hover: #454545;
     --color-delete-text: #DA3136;
     --color-muted-foreground: #A1A1A1;
+    --color-secondary-text: #A0A0A0;
     --color-background: #000000;
 
     /* Dropzone specific tokens */
@@ -50,6 +51,22 @@
 @utility drag-active {
     background-color: var(--color-sidebar-item-hover) !important;
     border-color: var(--color-dropzone-accent) !important;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@utility animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
 }
 
 @layer base {

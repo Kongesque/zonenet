@@ -44,3 +44,17 @@ def safe_remove_file(file_path):
             os.remove(file_path)
         except OSError:
             pass
+
+def clear_all_frames():
+    """
+    Removes all files in the frames folder.
+    """
+    frame_dir = "uploads/frames"
+    if os.path.exists(frame_dir):
+        for filename in os.listdir(frame_dir):
+            file_path = os.path.join(frame_dir, filename)
+            try:
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+            except OSError:
+                pass
