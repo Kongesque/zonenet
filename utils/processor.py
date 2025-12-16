@@ -1,7 +1,7 @@
 import time
 from core.detector import detection
 from utils.db import update_job
-from utils.file_handler import safe_remove_file, clear_all_frames
+from utils.file_handler import clear_all_uploads
 
 def run_processing_pipeline(taskID, job, target_class, confidence):
     start_time = time.time()
@@ -29,6 +29,6 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
     
     update_job(taskID, process_time=process_time, status='completed', detection_data=final_detection_events)
     
-    safe_remove_file(job.get('video_path'))
-    clear_all_frames()  # Remove all frames in frames folder
+
+    clear_all_uploads()  # Remove all frames in frames folder
 
