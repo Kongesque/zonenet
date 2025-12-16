@@ -82,14 +82,22 @@ def submit():
     if not job:
         return redirect(url_for('main'))
     
-    # Get target class and confidence from form
-    target_class = request.form.get('target_class', DEFAULT_TARGET_CLASS, type=int)
+    # Get zones and confidence from form
+    zones_json = request.form.get('zones', '[]')
     confidence = request.form.get('confidence', DEFAULT_CONFIDENCE, type=int)
-
-    update_job(taskID, target_class=target_class, confidence=confidence)
     
-    # Process the video
-    run_processing_pipeline(taskID, job, target_class, confidence)
+    try:
+        zones = json.loads(zones_json)
+    except:
+        zones = job.get('zones', [])
+    
+    # Filter to only complete zones (with enough points)
+    complete_zones = [z for z in zones if len(z.get('points', [])) >= 2]
+
+    update_job(taskID, zones=complete_zones, confidence=confidence)
+    
+    # Process the video with zones
+    run_processing_pipeline(taskID, job, complete_zones, confidence)
 
     return redirect(url_for('result', taskID=taskID))
 
@@ -123,36 +131,28 @@ def result():
     height = job.get('frame_height')
     process_time = job.get('process_time', 0)
     detection_data = job.get('detection_data', [])
+    zones = job.get('zones', [])
     
-    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time, detection_data=detection_data)
+    return render_template('result.html', form=form, taskID=taskID, width=width, height=height, process_time=process_time, detection_data=detection_data, zones=zones)
 
-@app.route('/get_coordinates', methods=['POST'])
-def get_coordinates():
+@app.route('/update_zones', methods=['POST'])
+def update_zones():
+    """Update zones for the current task"""
     data = request.get_json()
-    taskID =  session.get('taskID')
-    job = get_job(taskID)
-    if not job:
-        return jsonify({"message": "Job not found"}), 404
-
-    x, y = data.get('x'), data.get('y')
-    points = job['points']
-    points.append((x, y))
-    update_job(taskID, points=points)
-    return jsonify({"message": "Coordinates received successfully"})
-
-@app.route('/color_setting', methods=['POST'])
-def color_setting():
-    data = request.json
-    taskID =  session.get('taskID')
-    color = (int(data['b']), int(data['g']), int(data['r']))
-    update_job(taskID, color=color)
-    return jsonify({"message": "Color settings updated successfully"})
+    taskID = session.get('taskID')
+    if not taskID:
+        return jsonify({"message": "No active task"}), 400
+    
+    zones = data.get('zones', [])
+    update_job(taskID, zones=zones)
+    return jsonify({"message": "Zones updated successfully"})
 
 @app.route('/clear', methods=['POST'])
 def clear_coordinates():
+    """Clear all zones for the current task"""
     taskID = session.get('taskID')
-    update_job(taskID, points=[])
-    return jsonify({"message": "Coordinates cleared successfully"})
+    update_job(taskID, zones=[], points=[])
+    return jsonify({"message": "Zones cleared successfully"})
 
 # History API
 @app.route('/api/history/<task_id>', methods=['DELETE'])
@@ -205,10 +205,15 @@ def export_csv(task_id):
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['Timestamp (s)', 'Count'])
+    writer.writerow(['Timestamp (s)', 'Zone ID', 'Class ID', 'Count'])
     
     for event in detection_data:
-        writer.writerow([event['time'], event['count']])
+        writer.writerow([
+            event.get('time', 0),
+            event.get('zone_id', 'default'),
+            event.get('class_id', 0),
+            event.get('count', 0)
+        ])
         
     return Response(
         output.getvalue(),

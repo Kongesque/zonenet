@@ -69,31 +69,94 @@
 <script id="detection-data" type="application/json">
     {{ detection_data | tojson }}
 </script>
+<script id="zones-data" type="application/json">
+    {{ zones | tojson }}
+</script>
 <script>
     const detectionData = JSON.parse(document.getElementById('detection-data').textContent);
+    const zonesData = JSON.parse(document.getElementById('zones-data').textContent) || [];
+
+    // HSL to RGB helper (matches zone.js)
+    function hslToRgb(h, s, l) {
+        s /= 100;
+        l /= 100;
+        const k = n => (n + h / 30) % 12;
+        const a = s * Math.min(l, 1 - l);
+        const f = n => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
+        return [Math.round(255 * f(0)), Math.round(255 * f(8)), Math.round(255 * f(4))];
+    }
+
+    function getColorFromClassId(classId) {
+        const hue = (classId * 137.508) % 360;
+        return hslToRgb(hue, 85, 55);
+    }
 
     if (detectionData && detectionData.length > 0) {
         const ctx = document.getElementById('analyticsChart').getContext('2d');
 
-        // Downsample for chart clarity if too many points
-        const labels = detectionData.map(d => d.time);
-        const data = detectionData.map(d => d.count);
+        // Group detection events by zone
+        const zoneEvents = {};
+        const allTimes = new Set();
+
+        detectionData.forEach(d => {
+            const zoneId = d.zone_id || 'default';
+            if (!zoneEvents[zoneId]) {
+                zoneEvents[zoneId] = {};
+            }
+            zoneEvents[zoneId][d.time] = d.count;
+            allTimes.add(d.time);
+        });
+
+        // Sort times for x-axis
+        const labels = Array.from(allTimes).sort((a, b) => a - b);
+
+        // Create datasets for each zone
+        const datasets = [];
+        const zoneIds = Object.keys(zoneEvents);
+
+        zoneIds.forEach((zoneId, idx) => {
+            // Find zone info to get color
+            const zone = zonesData.find(z => z.id === zoneId);
+            let color;
+
+            if (zone && zone.color) {
+                color = `rgb(${zone.color[0]}, ${zone.color[1]}, ${zone.color[2]})`;
+            } else if (zone && zone.classId) {
+                const [r, g, b] = getColorFromClassId(zone.classId);
+                color = `rgb(${r}, ${g}, ${b})`;
+            } else {
+                // Fallback colors
+                const fallbackColors = ['#1F6F65', '#F59E0B', '#EF4444', '#8B5CF6', '#10B981'];
+                color = fallbackColors[idx % fallbackColors.length];
+            }
+
+            // Build data array with cumulative counts
+            let lastCount = 0;
+            const data = labels.map(time => {
+                if (zoneEvents[zoneId][time] !== undefined) {
+                    lastCount = zoneEvents[zoneId][time];
+                }
+                return lastCount;
+            });
+
+            datasets.push({
+                label: `Zone ${idx + 1}`,
+                data: data,
+                borderColor: color,
+                backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                fill: true,
+                tension: 0.4
+            });
+        });
 
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    label: 'Objects Counted',
-                    data: data,
-                    borderColor: '#1F6F65', // Accent color (Teal)
-                    backgroundColor: 'rgba(31, 111, 101, 0.1)',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    fill: true,
-                    tension: 0.4
-                }]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -104,14 +167,20 @@
                 },
                 plugins: {
                     legend: {
-                        display: false
+                        display: datasets.length > 1,
+                        position: 'top',
+                        labels: {
+                            color: '#9ca3af',
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
                     },
                     tooltip: {
                         backgroundColor: '#1f2937',
                         titleColor: '#f3f4f6',
                         bodyColor: '#d1d5db',
                         padding: 10,
-                        displayColors: false,
+                        displayColors: true,
                     }
                 },
                 scales: {

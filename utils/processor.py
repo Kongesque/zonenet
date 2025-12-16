@@ -3,7 +3,16 @@ from core.detector import detection
 from utils.db import update_job
 from utils.file_handler import clear_all_uploads
 
-def run_processing_pipeline(taskID, job, target_class, confidence):
+def run_processing_pipeline(taskID, job, zones, confidence):
+    """
+    Run video processing pipeline with multiple zones.
+    
+    Args:
+        taskID: Task identifier
+        job: Job data from database
+        zones: List of zone objects [{id, points, classId, color}, ...]
+        confidence: Detection confidence threshold (1-100)
+    """
     start_time = time.time()
     
     last_progress = 0
@@ -11,11 +20,9 @@ def run_processing_pipeline(taskID, job, target_class, confidence):
     
     for frame, progress, detection_events in detection(
         job['video_path'], 
-        job['points'], 
+        zones,
         (job['frame_width'], job['frame_height']), 
-        job['color'], 
         taskID, 
-        target_class, 
         confidence
     ):
         final_detection_events = detection_events

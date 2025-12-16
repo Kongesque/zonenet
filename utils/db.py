@@ -79,12 +79,22 @@ def init_db():
         pass
     conn.close()
 
+    # Add zones column for multiple zone support
+    conn = get_db()
+    try:
+        conn.execute('ALTER TABLE jobs ADD COLUMN zones TEXT')
+        conn.commit()
+    except sqlite3.OperationalError:
+        pass
+    conn.close()
+
 def create_job(task_id, filename, video_path):
     conn = get_db()
-    # Default name to filename, status to pending, target_class to 19 (cow), confidence to 40
+    # Default name to filename, status to pending, confidence to 40
+    # Initialize with empty zones array (zones replaces points/color/target_class per zone)
     conn.execute(
-        'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class, confidence) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending', 19, 40)
+        'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class, confidence, zones) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        (task_id, filename, filename, video_path, '[]', '[5, 189, 251]', 'pending', 19, 40, '[]')
     )
     conn.commit()
     conn.close()
@@ -111,6 +121,11 @@ def get_job(task_id):
         except:
              job_dict['detection_data'] = []
 
+        # Parse zones JSON (for multiple zone support)
+        try:
+            job_dict['zones'] = json.loads(job_dict['zones']) if job_dict.get('zones') else []
+        except:
+            job_dict['zones'] = []
              
         # Ensure target_class is present (for old records)
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
@@ -148,6 +163,8 @@ def update_job(task_id, **kwargs):
         kwargs['color'] = json.dumps(kwargs['color'])
     if 'detection_data' in kwargs:
         kwargs['detection_data'] = json.dumps(kwargs['detection_data'])
+    if 'zones' in kwargs:
+        kwargs['zones'] = json.dumps(kwargs['zones'])
 
     columns = ', '.join(f"{key} = ?" for key in kwargs.keys())
     values = list(kwargs.values())
@@ -156,3 +173,4 @@ def update_job(task_id, **kwargs):
     conn.execute(f'UPDATE jobs SET {columns} WHERE id = ?', values)
     conn.commit()
     conn.close()
+

@@ -59,24 +59,26 @@
             <!-- Tools Sidebar -->
             <section
                 class="w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
-                <div>
-                    <h2 class="text-sm font-semibold text-text-color mb-4">Area Selection</h2>
+                <div class="overflow-y-auto max-h-[calc(100vh-200px)]">
+                    <h2 class="text-sm font-semibold text-text-color mb-4">Zone Selection</h2>
+
+                    <!-- Zone List -->
+                    <div id="zoneList" class="space-y-3 mb-4">
+                        <!-- Zones will be dynamically added here -->
+                    </div>
+
+                    <!-- Add Zone Button -->
+                    <button id="addZoneBtn"
+                        class="w-full py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer flex items-center justify-center gap-2 mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Add Zone
+                    </button>
 
                     <div class="space-y-4">
-                        <!-- Object Class Selector -->
-                        <div class="object-class">
-                            <div class="flex justify-between text-sm mb-2">
-                                <span class="text-secondary-text">Target Object</span>
-                            </div>
-                            <select id="classSelector"
-                                class="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-2 text-sm focus:outline-none focus:border-blue-500 appearance-none cursor-pointer">
-                                {% for id, name in coco_classes|dictsort(false, 'value') %}
-                                <option value="{{ id }}" {% if id==19 %}selected{% endif %}>{{ name|capitalize }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
                         <!-- Confidence Slider -->
                         <div class="slider-confidence">
                             <div class="confidence-info flex justify-between text-sm mb-2">
@@ -97,16 +99,15 @@
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
 
-
-
-                        <!-- Clear Button -->
+                        <!-- Clear All Button -->
                         <button
-                            class="draw w-full py-2.5 md:py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer">Clear</button>
+                            class="draw w-full py-2.5 md:py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer">Clear
+                            All</button>
                     </div>
                 </div>
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
-                    <input type="hidden" name="target_class" id="targetClassInput" value="19">
+                    <input type="hidden" name="zones" id="zonesInput" value="[]">
                     <input type="hidden" name="confidence" id="confidenceInput" value="40">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
@@ -174,6 +175,7 @@
     <div id="responseMessage"></div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script id="coco-classes-data" type="application/json">{{ coco_classes | tojson }}</script>
     <script src="{{url_for('static', filename='js/zone.js')}}"></script>
     <script>
         $(document).ready(function () {
@@ -218,16 +220,6 @@
             // Start polling after a short delay to let the form submit
             setTimeout(pollProgress, 1000);
         };
-
-        // Handle Class Selection
-        const classSelector = document.getElementById('classSelector');
-        const targetClassInput = document.getElementById('targetClassInput');
-
-        if (classSelector && targetClassInput) {
-            classSelector.addEventListener('change', (e) => {
-                targetClassInput.value = e.target.value;
-            });
-        }
 
         // Handle Confidence Slider
         const confidenceSlider = document.getElementById('confidenceSlider');

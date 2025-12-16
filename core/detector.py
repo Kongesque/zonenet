@@ -57,29 +57,38 @@ def check_line_crossing(prev_pos, curr_pos, line_start, line_end):
     return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
 
 
-def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf=40):
-
+def detection(path_x, zones, frame_size, taskID, conf=40):
+    """
+    Process video with multiple detection zones.
+    
+    Args:
+        path_x: Path to source video
+        zones: List of zone objects [{id, points, classId, color}, ...]
+        frame_size: Tuple of (width, height)
+        taskID: Task identifier for output file naming
+        conf: Confidence threshold (1-100)
+    """
     # Constants
-    ClassID = [target_class]
     SOURCE_VIDEO = path_x
     DESTIN_VIDEO = 'uploads/outputs/' + 'output_' + taskID + '.mp4'
 
     font = cv2.FONT_ITALIC
     frame_counter = 0
     track_history = defaultdict(lambda: [])
-    track_history = defaultdict(lambda: [])
-    crossed_objects = {}
+    
+    # Per-zone tracking: {zone_id: {track_id: True}}
+    crossed_objects_per_zone = {z['id']: {} for z in zones}
+    
+    # Detection events for each zone
     detection_events = []
 
-   
     width = frame_size[0]
     height = frame_size[1]
 
-
-    BASE_FONT_SIZE = 1.5
+    BASE_FONT_SIZE = 1.2
     font_scale = min(width, height) / 1000 * BASE_FONT_SIZE
-    BASE_FONT_THICKNESS = 3
-    font_thickness = max(width, height) // 1000 * BASE_FONT_THICKNESS
+    BASE_FONT_THICKNESS = 2
+    font_thickness = max(1, max(width, height) // 1000 * BASE_FONT_THICKNESS)
 
     model = YOLO('weights/yolo11n.pt')
 
@@ -98,7 +107,37 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
 
     start_time = time.time()
 
-    area_np = np.array(Area, np.int32)
+    # Preprocess zones
+    zone_data = []
+    all_class_ids = set()
+    for zone in zones:
+        points = zone.get('points', [])
+        if len(points) < 2:
+            continue
+            
+        # Convert points to proper format
+        area = [(p['x'], p['y']) for p in points]
+        area_np = np.array(area, np.int32)
+        
+        class_id = zone.get('classId', 19)
+        all_class_ids.add(class_id)
+        
+        # Get color from zone (already in RGB from frontend)
+        zone_color = zone.get('color', [255, 255, 0])
+        # Convert to BGR for OpenCV
+        bgr_color = (zone_color[2], zone_color[1], zone_color[0])
+        
+        zone_data.append({
+            'id': zone['id'],
+            'area': area,
+            'area_np': area_np,
+            'class_id': class_id,
+            'color': bgr_color,
+            'is_line': len(points) == 2
+        })
+    
+    # Convert class IDs to list for YOLO
+    ClassIDs = list(all_class_ids) if all_class_ids else [19]
 
     while cap.isOpened():
         
@@ -127,78 +166,92 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         
         frame_counter += 1
 
-
         # Normalize confidence to 0.0-1.0 range
         conf_float = conf / 100.0
-        results = model.track(frame, classes=ClassID, persist=True, save=False, tracker="bytetrack.yaml", conf=conf_float)
+        results = model.track(frame, classes=ClassIDs, persist=True, save=False, tracker="bytetrack.yaml", conf=conf_float)
         boxes = results[0].boxes.xywh.cpu()
         track_ids = results[0].boxes.id.int().cpu().tolist() if results[0].boxes is not None and results[0].boxes.id is not None else []
+        detected_classes = results[0].boxes.cls.int().cpu().tolist() if results[0].boxes is not None else []
 
         frame = results[0].plot()
 
-
         center_x, center_y = 0, 0
         
-        # Determine if we're using a line (2 points) or polygon (3+ points)
-        is_line_mode = len(Area) == 2
-
-        for box, track_id in zip(boxes, track_ids):
+        # Process each detection
+        for i, (box, track_id) in enumerate(zip(boxes, track_ids)):
             x, y, w, h = box
             center_x, center_y = int(x), int(y)
+            detected_class = detected_classes[i] if i < len(detected_classes) else -1
             
             track = track_history[track_id]
             track.append((float(x), float(y)))
             if len(track) > 30:
                 track.pop(0)
             
-            # Check if object is in zone (different logic for line vs polygon)
-            in_zone = False
-            if is_line_mode:
-                # For 2-point line: check if object crosses the line
-                if len(track) >= 2:
-                    prev_pos = track[-2]
-                    curr_pos = track[-1]
-                    line_pt1 = (int(Area[0][0]), int(Area[0][1]))
-                    line_pt2 = (int(Area[1][0]), int(Area[1][1]))
-                    in_zone = check_line_crossing(prev_pos, curr_pos, line_pt1, line_pt2)
-            else:
-                # For 3+ point polygon: use standard containment test
-                results = cv2.pointPolygonTest(area_np, ((center_x, center_y)), False)
-                in_zone = results >= 0
-
-            if in_zone:
-                if track_id not in crossed_objects:
-                    crossed_objects[track_id] = True
-                    # Log event
-                    timestamp = round(frame_counter / fps, 2)
-                    detection_events.append({
-                        "time": timestamp,
-                        "count": len(crossed_objects)
-                    })
+            # Check each zone
+            for zd in zone_data:
+                # Only check if detection matches zone's target class
+                if detected_class != zd['class_id']:
+                    continue
                     
-                cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Counting) GBR
-
-            else:
-                if track_id in crossed_objects and crossed_objects[track_id] == True:
-                    cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted) GBR
+                zone_id = zd['id']
+                
+                # Check if object is in zone (different logic for line vs polygon)
+                in_zone = False
+                if zd['is_line']:
+                    # For 2-point line: check if object crosses the line
+                    if len(track) >= 2:
+                        prev_pos = track[-2]
+                        curr_pos = track[-1]
+                        line_pt1 = (int(zd['area'][0][0]), int(zd['area'][0][1]))
+                        line_pt2 = (int(zd['area'][1][0]), int(zd['area'][1][1]))
+                        in_zone = check_line_crossing(prev_pos, curr_pos, line_pt1, line_pt2)
                 else:
-                    cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
+                    # For 3+ point polygon: use standard containment test
+                    result = cv2.pointPolygonTest(zd['area_np'], ((center_x, center_y)), False)
+                    in_zone = result >= 0
 
-        # Draw the zone (line or polygon)
-        if is_line_mode:
-            pt1 = (int(Area[0][0]), int(Area[0][1]))
-            pt2 = (int(Area[1][0]), int(Area[1][1]))
-            cv2.line(frame, pt1, pt2, areaColor, 3)
-        else:
-            cv2.polylines(frame, [area_np], True, areaColor, 3)
+                if in_zone:
+                    if track_id not in crossed_objects_per_zone[zone_id]:
+                        crossed_objects_per_zone[zone_id][track_id] = True
+                        # Log event
+                        timestamp = round(frame_counter / fps, 2)
+                        detection_events.append({
+                            "time": timestamp,
+                            "zone_id": zone_id,
+                            "class_id": zd['class_id'],
+                            "count": len(crossed_objects_per_zone[zone_id])
+                        })
+                        
+                    cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Counting) GBR
+
+                else:
+                    if track_id in crossed_objects_per_zone[zone_id] and crossed_objects_per_zone[zone_id][track_id] == True:
+                        cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted) GBR
+                    else:
+                        cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
+
+        # Draw all zones
+        for zd in zone_data:
+            if zd['is_line']:
+                pt1 = (int(zd['area'][0][0]), int(zd['area'][0][1]))
+                pt2 = (int(zd['area'][1][0]), int(zd['area'][1][1]))
+                cv2.line(frame, pt1, pt2, zd['color'], 3)
+            else:
+                cv2.polylines(frame, [zd['area_np']], True, zd['color'], 3)
         
-        count_text = f"Count: {len(crossed_objects)}"
-
-        # Generate color based on class ID for text overlay
-        text_color = get_color_from_class_id(target_class)
-
-        count_text_position = (int(width * 0.855), int(height * 0.97))
-        cv2.putText(frame, count_text, count_text_position, font, font_scale, text_color, font_thickness) 
+        # Draw count text for each zone (stacked vertically)
+        y_offset = int(height * 0.05)
+        for idx, zd in enumerate(zone_data):
+            zone_id = zd['id']
+            count = len(crossed_objects_per_zone.get(zone_id, {}))
+            text_color = get_color_from_class_id(zd['class_id'])
+            
+            # Zone label with count
+            count_text = f"Zone {idx + 1}: {count}"
+            
+            text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))
+            cv2.putText(frame, count_text, text_position, font, font_scale, text_color, font_thickness)
         
         # Only resize if necessary
         if frame.shape[1] != width or frame.shape[0] != height:
