@@ -56,7 +56,7 @@ def init_db():
         pass
 
     try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN confidence INTEGER DEFAULT 40')
+        conn.execute('ALTER TABLE jobs ADD COLUMN confidence INTEGER DEFAULT 35')
     except sqlite3.OperationalError:
         # Column likely already exists
         pass
@@ -90,7 +90,7 @@ def init_db():
 
 def create_job(task_id, filename, video_path):
     conn = get_db()
-    # Default name to filename, status to pending, confidence to 40
+    # Default name to filename, status to pending, confidence to 35
     # Initialize with empty zones array (zones replaces points/color/target_class per zone)
     conn.execute(
         'INSERT INTO jobs (id, name, filename, video_path, points, color, status, target_class, confidence, zones) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

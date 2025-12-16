@@ -169,20 +169,32 @@ function selectZone(index) {
     redrawCanvas();
 }
 
+// Get count of zones with a specific class ID
+function getClassCount(classId) {
+    return zones.filter(z => z.classId === classId).length;
+}
+
+// Generate label for a zone based on class
+function generateZoneLabel(classId) {
+    const className = cocoClasses[classId] || 'Object';
+    const capitalizedName = className.charAt(0).toUpperCase() + className.slice(1);
+    const count = getClassCount(classId) + 1;
+    return `${capitalizedName} ${count}`;
+}
+
 // Add a new zone
 function addZone() {
     if (zones.length >= MAX_ZONES) return;
 
     const defaultClassId = 19; // Cow
     const color = getColorFromClassId(defaultClassId);
-    const zoneNumber = zones.length + 1;
 
     const newZone = {
         id: generateZoneId(),
         points: [],
         classId: defaultClassId,
         color: color,
-        label: `Zone ${zoneNumber}`
+        label: generateZoneLabel(defaultClassId)
     };
 
     zones.push(newZone);
@@ -222,6 +234,7 @@ function updateZoneClass(index, classId) {
 
     zones[index].classId = classId;
     zones[index].color = getColorFromClassId(classId);
+    zones[index].label = generateZoneLabel(classId);
 
     renderZoneList();
     redrawCanvas();

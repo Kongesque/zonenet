@@ -58,8 +58,8 @@
 
             <!-- Tools Sidebar -->
             <section
-                class="w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
-                <div class="overflow-y-auto max-h-[calc(100vh-200px)] pr-3">
+                class="w-full md:w-[280px] shrink-0 p-2 md:p-4 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
+                <div class="overflow-y-auto max-h-[calc(100vh-200px)] p-3">
                     <h2 class="text-sm font-semibold text-text-color mb-4">Zone Selection</h2>
 
                     <!-- Zone List -->
@@ -93,9 +93,9 @@
                         <div class="slider-confidence">
                             <div class="confidence-info flex justify-between text-sm mb-2">
                                 <span class="text-secondary-text">Confidence Threshold</span>
-                                <span class="value-confidence text-text-color font-medium">40%</span>
+                                <span class="value-confidence text-text-color font-medium">35%</span>
                             </div>
-                            <input type="range" id="confidenceSlider" value="40" min="1" max="100"
+                            <input type="range" id="confidenceSlider" value="35" min="1" max="100"
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
                     </div>
@@ -103,7 +103,7 @@
 
                 <form action="{{ url_for('submit') }}" method="post" class="mt-4 md:mt-0">
                     <input type="hidden" name="zones" id="zonesInput" value="[]">
-                    <input type="hidden" name="confidence" id="confidenceInput" value="40">
+                    <input type="hidden" name="confidence" id="confidenceInput" value="35">
                     <div class="run disable">
                         <button class="process btn-primary w-full py-3" onclick="loading();">Process</button>
                     </div>
@@ -121,7 +121,7 @@
     </main>
 
     <footer id="content"
-        class="flex flex-col md:flex-row justify-between items-center gap-2 py-2.5 px-3 border-t border-primary-border bg-transparent">
+        class="flex flex-col md:flex-row justify-between items-center gap-2 py-2.5 px-3 bg-transparent">
         <div class="flex gap-4 md:gap-6 text-sm text-secondary-text">
             <p class="size-width">
                 <span>Width: </span>

@@ -18,7 +18,7 @@ app.config['SECRET_KEY'] = 'kongesque'
 app.config['UPLOAD_FOLDER'] = 'uploads/videos'  
 
 DEFAULT_TARGET_CLASS = 19
-DEFAULT_CONFIDENCE = 40  
+DEFAULT_CONFIDENCE = 35  
 
 # Ensure directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

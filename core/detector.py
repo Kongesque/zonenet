@@ -94,7 +94,7 @@ def detection(path_x, zones, frame_size, taskID, conf=40):
 
     cap = cv2.VideoCapture(SOURCE_VIDEO)
 
-    targetFPS = 12
+    targetFPS = 24
     fps = cap.get(cv2.CAP_PROP_FPS)
     total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     newFPS = targetFPS if fps > targetFPS else fps
