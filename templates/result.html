@@ -5,23 +5,46 @@
 
 
 {% block content %}
-<main id="content" class="relative flex-1 flex items-center justify-center overflow-hidden">
-
-
-
-    <div class="w-full h-full flex flex-col items-center justify-start p-4 gap-6 overflow-y-auto">
-        <video class="max-w-full max-h-[60vh] object-contain rounded-xl shadow-lg" controls>
-            <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
-                type="video/mp4">
-        </video>
-
-        <!-- Analytics Section -->
-        <div class="w-full max-w-4xl bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-text-color font-semibold text-lg">Analytics</h3>
+<main id="content" class="relative flex-1 flex flex-col items-center overflow-hidden">
+    <div class="w-full h-full flex flex-col lg:flex-row gap-6 p-4 overflow-y-auto">
+        <!-- Video Section (Left) -->
+        <div class="flex-1 flex flex-col min-w-0">
+            <div class="w-full rounded-xl overflow-hidden shadow-lg bg-black relative pt-[56.25%]">
+                <video class="absolute top-0 left-0 w-full h-full object-contain" controls>
+                    <source src="{{ url_for('media_file', filename='outputs/' + 'output_' + taskID + '.mp4') }}"
+                        type="video/mp4">
+                </video>
             </div>
-            <div class="w-full h-64">
-                <canvas id="analyticsChart"></canvas>
+        </div>
+
+        <!-- Analytics/Toolbar Section (Right) -->
+        <div class="w-full lg:w-96 flex-shrink-0 flex flex-col gap-4">
+            <div class="w-full bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-text-color font-semibold text-lg">Analytics</h3>
+                </div>
+                <!-- Fixed height chart container -->
+                <div class="w-full h-64">
+                    <canvas id="analyticsChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Metadata moved to sidebar/toolbar as commonly seen in video platforms -->
+            <div
+                class="w-full bg-secondary-bg rounded-xl p-4 shadow-sm border border-primary-border flex flex-col gap-2 text-sm text-secondary-text">
+                <h3 class="text-text-color font-semibold text-lg mb-2">Details</h3>
+                <p class="flex justify-between">
+                    <span>Width:</span>
+                    <span class="value text-text-color">{{ width }} px</span>
+                </p>
+                <p class="flex justify-between">
+                    <span>Height:</span>
+                    <span class="value text-text-color">{{ height }} px</span>
+                </p>
+                <p class="flex justify-between">
+                    <span>Process Time:</span>
+                    <span class="value text-text-color">{{ process_time }} s</span>
+                </p>
             </div>
         </div>
     </div>
@@ -29,20 +52,7 @@
 
 <footer id="content"
     class="flex flex-col md:flex-row justify-between items-center gap-4 py-2.5 px-3 border-t border-primary-border bg-transparent">
-    <div class="flex gap-4 md:gap-6 text-sm text-secondary-text">
-        <p class="size-width">
-            <span>Width: </span>
-            <span class="value text-text-color"> {{ width }} px</span>
-        </p>
-        <p class="size-height">
-            <span>Height: </span>
-            <span class="value text-text-color"> {{ height }} px</span>
-        </p>
-        <p class="process-time">
-            <span>Process Time: </span>
-            <span class="value text-text-color"> {{ process_time }} s</span>
-        </p>
-    </div>
+    <div class="flex-1"></div>
     <div class="flex items-center gap-3">
         <a href="{{ url_for('export_csv', task_id=taskID) }}"
             class="btn-primary flex items-center gap-2 hover:bg-hover-btn">
