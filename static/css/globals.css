@@ -114,6 +114,11 @@
         color: var(--color-text-color);
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        @apply transition-colors duration-200 ease-in-out;
+    }
+
+    * {
+        @apply transition-colors duration-200 ease-in-out;
     }
 }
 
