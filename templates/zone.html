@@ -97,21 +97,7 @@
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
 
-                        <hr class="border-primary-border">
 
-                        <!-- Colors -->
-                        <div class="colors">
-                            <label class="text-sm text-secondary-text block mb-2">Colors</label>
-                            <ul class="options flex flex-wrap gap-2">
-                                <li class="option bg-red-500" data-color="239,68,68"></li>
-                                <li class="option selected bg-yellow-500" data-color="234,179,8"></li>
-                                <li class="option bg-green-500" data-color="34,197,94"></li>
-                                <li class="option bg-blue-500" data-color="59,130,246"></li>
-                                <li class="option bg-purple-500" data-color="168,85,247"></li>
-                            </ul>
-                        </div>
-
-                        <hr class="border-primary-border">
 
                         <!-- Clear Button -->
                         <button
@@ -187,8 +173,8 @@
 
     <div id="responseMessage"></div>
 
-    <script src="{{url_for('static', filename='js/zone.js')}}"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="{{url_for('static', filename='js/zone.js')}}"></script>
     <script>
         $(document).ready(function () {
             $('#loading').hide();
