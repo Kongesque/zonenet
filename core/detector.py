@@ -2,8 +2,25 @@ import cv2
 from collections import defaultdict
 
 from ultralytics import YOLO
+
+import colorsys
 import time
 import numpy as np
+
+def get_color_from_class_id(class_id):
+    """
+    Generate a distinct color based on class ID using Golden Angle Approximation.
+    Matches the frontend logic in zone.js.
+    """
+    hue = ((class_id * 137.508) % 360) / 360.0
+    saturation = 0.85
+    lightness = 0.55
+    
+    # colorsys.hls_to_rgb takes (h, l, s)
+    r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
+    
+    # Convert to 0-255 and return as BGR (for OpenCV)
+    return (int(b * 255), int(g * 255), int(r * 255))
 
 
 def point_to_line_distance(point, line_start, line_end):
@@ -177,8 +194,11 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
         
         count_text = f"Count: {len(crossed_objects)}"
 
+        # Generate color based on class ID for text overlay
+        text_color = get_color_from_class_id(target_class)
+
         count_text_position = (int(width * 0.855), int(height * 0.97))
-        cv2.putText(frame, count_text, count_text_position, font, font_scale, (230, 232, 232), font_thickness) #  (5, 189, 251)
+        cv2.putText(frame, count_text, count_text_position, font, font_scale, text_color, font_thickness) 
         
         # Only resize if necessary
         if frame.shape[1] != width or frame.shape[0] != height:
