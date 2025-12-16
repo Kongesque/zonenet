@@ -30,12 +30,11 @@
 
 
     <!-- Header -->
-    <header id="content-header" class="flex justify-between items-center py-2.5 px-3">
+    <header id="content-header" class="flex justify-between items-center py-2.5 px-3 bg-transparent">
         <a href="{{ url_for('main') }}" class="no-underline">
             <div class="text-lg font-semibold text-text-color tracking-tight font-mono">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
-            {% block header_actions %}
             <button onclick="toggleTheme()"
                 class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color"
                 title="Toggle Theme">
@@ -60,12 +59,7 @@
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                 </svg>
             </button>
-            <a href="mailto:kongesque@gmail.com" class="btn-secondary no-underline">Feedback</a>
-            <a href="https://github.com/Kongesque" target="_blank"
-                class="w-6 h-6 flex items-center justify-center rounded-full">
-                <img src="{{ url_for('static', filename='img/github.svg') }}"
-                    class="w-6 h-6 invert dark-only-invert opacity-80">
-            </a>
+            {% block header_actions %}
             {% endblock %}
         </div>
     </header>

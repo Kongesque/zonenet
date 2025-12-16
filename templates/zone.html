@@ -7,19 +7,49 @@
     <title>ZoneNet</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+    <script>
+        // Check for saved theme preference or system preference
+        if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+            document.documentElement.classList.add('light')
+        } else {
+            document.documentElement.classList.remove('light')
+        }
+    </script>
 </head>
 
 <body class="bg-background text-text-color font-sans h-screen overflow-hidden flex flex-col">
 
 
 
-    <header id="content" class="flex justify-between items-center py-2.5 px-3">
+    <header id="content" class="flex justify-between items-center py-2.5 px-3 bg-transparent">
         <a href="{{ url_for('main') }}" class="no-underline">
             <div class="text-lg font-semibold text-text-color tracking-tight font-mono">ZoneNet</div>
         </a>
         <div class="flex items-center gap-2">
-
-
+            <button onclick="toggleTheme()"
+                class="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color"
+                title="Toggle Theme">
+                <!-- Sun Icon (for Dark Mode) -->
+                <svg class="block light:hidden w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </svg>
+                <!-- Moon Icon (for Light Mode) -->
+                <svg class="hidden light:block w-5 h-5" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+            </button>
         </div>
     </header>
 
@@ -109,7 +139,7 @@
     </main>
 
     <footer id="content"
-        class="flex flex-col md:flex-row justify-between items-center gap-2 py-4 px-4 md:px-6 border-t border-primary-border">
+        class="flex flex-col md:flex-row justify-between items-center gap-2 py-2.5 px-3 border-t border-primary-border bg-transparent">
         <div class="flex gap-4 md:gap-6 text-sm text-secondary-text">
             <p class="size-width">
                 <span>Width: </span>
@@ -223,6 +253,16 @@
                 confidenceValue.innerText = `${e.target.value}%`;
                 confidenceInput.value = e.target.value;
             });
+        }
+
+        function toggleTheme() {
+            if (document.documentElement.classList.contains('light')) {
+                document.documentElement.classList.remove('light');
+                localStorage.theme = 'dark';
+            } else {
+                document.documentElement.classList.add('light');
+                localStorage.theme = 'light';
+            }
         }
     </script>
 
