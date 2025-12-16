@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@variant light (&:where(.light, .light *));
+
 
 /* Geist Sans from Fontsource CDN */
 @font-face {
