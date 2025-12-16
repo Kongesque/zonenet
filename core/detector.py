@@ -5,6 +5,41 @@ from ultralytics import YOLO
 import time
 import numpy as np
 
+
+def point_to_line_distance(point, line_start, line_end):
+    """Calculate perpendicular distance from a point to a line segment."""
+    px, py = point
+    x1, y1 = line_start
+    x2, y2 = line_end
+    
+    # Line segment vector
+    dx, dy = x2 - x1, y2 - y1
+    
+    # Handle degenerate case where line is a point
+    if dx == 0 and dy == 0:
+        return np.sqrt((px - x1)**2 + (py - y1)**2)
+    
+    # Parameter t for closest point on infinite line
+    t = max(0, min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)))
+    
+    # Closest point on the line segment
+    closest_x = x1 + t * dx
+    closest_y = y1 + t * dy
+    
+    return np.sqrt((px - closest_x)**2 + (py - closest_y)**2)
+
+
+def check_line_crossing(prev_pos, curr_pos, line_start, line_end):
+    """Check if movement from prev_pos to curr_pos crosses the line segment."""
+    def ccw(A, B, C):
+        return (C[1] - A[1]) * (B[0] - A[0]) > (B[1] - A[1]) * (C[0] - A[0])
+    
+    A, B = prev_pos, curr_pos
+    C, D = line_start, line_end
+    
+    return ccw(A, C, D) != ccw(B, C, D) and ccw(A, B, C) != ccw(A, B, D)
+
+
 def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf=40):
 
     # Constants
@@ -86,18 +121,35 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
 
 
         center_x, center_y = 0, 0
+        
+        # Determine if we're using a line (2 points) or polygon (3+ points)
+        is_line_mode = len(Area) == 2
 
         for box, track_id in zip(boxes, track_ids):
             x, y, w, h = box
             center_x, center_y = int(x), int(y)
-            results = cv2.pointPolygonTest(area_np, ((center_x, center_y)), False)
             
             track = track_history[track_id]
             track.append((float(x), float(y)))
             if len(track) > 30:
                 track.pop(0)
+            
+            # Check if object is in zone (different logic for line vs polygon)
+            in_zone = False
+            if is_line_mode:
+                # For 2-point line: check if object crosses the line
+                if len(track) >= 2:
+                    prev_pos = track[-2]
+                    curr_pos = track[-1]
+                    line_pt1 = (int(Area[0][0]), int(Area[0][1]))
+                    line_pt2 = (int(Area[1][0]), int(Area[1][1]))
+                    in_zone = check_line_crossing(prev_pos, curr_pos, line_pt1, line_pt2)
+            else:
+                # For 3+ point polygon: use standard containment test
+                results = cv2.pointPolygonTest(area_np, ((center_x, center_y)), False)
+                in_zone = results >= 0
 
-            if results >= 0:
+            if in_zone:
                 if track_id not in crossed_objects:
                     crossed_objects[track_id] = True
                     # Log event
@@ -115,7 +167,13 @@ def detection(path_x, Area, frame_size, areaColor, taskID, target_class=19, conf
                 else:
                     cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
 
-        cv2.polylines(frame, [area_np], True, areaColor, 3)
+        # Draw the zone (line or polygon)
+        if is_line_mode:
+            pt1 = (int(Area[0][0]), int(Area[0][1]))
+            pt2 = (int(Area[1][0]), int(Area[1][1]))
+            cv2.line(frame, pt1, pt2, areaColor, 3)
+        else:
+            cv2.polylines(frame, [area_np], True, areaColor, 3)
         
         count_text = f"Count: {len(crossed_objects)}"
 
