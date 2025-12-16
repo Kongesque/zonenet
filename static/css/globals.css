@@ -120,6 +120,31 @@
     * {
         @apply transition-colors duration-200 ease-in-out;
     }
+
+    /* Thin scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 4px;
+        height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--color-gray-500);
+        border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--color-gray-400);
+    }
+
+    /* Firefox scrollbar */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-gray-500) transparent;
+    }
 }
 
 @layer components {

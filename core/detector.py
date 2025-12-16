@@ -133,7 +133,8 @@ def detection(path_x, zones, frame_size, taskID, conf=40):
             'area_np': area_np,
             'class_id': class_id,
             'color': bgr_color,
-            'is_line': len(points) == 2
+            'is_line': len(points) == 2,
+            'label': zone.get('label', f'Zone {len(zone_data) + 1}')
         })
     
     # Convert class IDs to list for YOLO
@@ -248,7 +249,8 @@ def detection(path_x, zones, frame_size, taskID, conf=40):
             text_color = get_color_from_class_id(zd['class_id'])
             
             # Zone label with count
-            count_text = f"Zone {idx + 1}: {count}"
+            zone_label = zd.get('label', f'Zone {idx + 1}')
+            count_text = f"{zone_label}: {count}"
             
             text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))
             cv2.putText(frame, count_text, text_position, font, font_scale, text_color, font_thickness)

@@ -63,7 +63,12 @@ function createZoneItemHTML(zone, index) {
             <div class="flex items-center justify-between mb-2">
                 <div class="flex items-center gap-2">
                     <div class="w-3 h-3 rounded-full" style="background-color: ${colorHex}"></div>
-                    <span class="text-sm font-medium text-text-color">Zone ${index + 1}</span>
+                    <div class="flex items-center gap-1">
+                        <input type="text" class="zone-label-input bg-transparent text-sm font-medium text-text-color w-12 focus:outline-none focus:border-b focus:border-text-color" value="${zone.label}" data-zone-index="${index}" placeholder="Zone ${index + 1}">
+                        <svg class="w-3 h-3 text-secondary-text" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                        </svg>
+                    </div>
                     ${isComplete ? '<span class="text-xs text-green-500">✓</span>' : '<span class="text-xs text-secondary-text">' + zone.points.length + '/' + selectedPoint + '</span>'}
                 </div>
                 <button class="delete-zone-btn text-secondary-text hover:text-red-500 transition-colors p-1" data-zone-index="${index}">
@@ -144,6 +149,17 @@ function attachZoneListeners() {
             updateZoneClass(index, classId);
         });
     });
+
+    // Label input change
+    document.querySelectorAll('.zone-label-input').forEach(input => {
+        input.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent zone selection when clicking input
+        });
+        input.addEventListener('input', (e) => {
+            const index = parseInt(input.dataset.zoneIndex);
+            updateZoneLabel(index, e.target.value);
+        });
+    });
 }
 
 // Select a zone for editing
@@ -159,12 +175,14 @@ function addZone() {
 
     const defaultClassId = 19; // Cow
     const color = getColorFromClassId(defaultClassId);
+    const zoneNumber = zones.length + 1;
 
     const newZone = {
         id: generateZoneId(),
         points: [],
         classId: defaultClassId,
-        color: color
+        color: color,
+        label: `Zone ${zoneNumber}`
     };
 
     zones.push(newZone);
@@ -172,6 +190,15 @@ function addZone() {
 
     renderZoneList();
     redrawCanvas();
+    syncZonesToBackend();
+}
+
+// Update zone label
+function updateZoneLabel(index, label) {
+    if (index < 0 || index >= zones.length) return;
+
+    zones[index].label = label;
+    updateZonesInput();
     syncZonesToBackend();
 }
 
@@ -207,7 +234,8 @@ function updateZonesInput() {
         id: z.id,
         points: z.points,
         classId: z.classId,
-        color: z.color
+        color: z.color,
+        label: z.label
     }));
     zonesInput.value = JSON.stringify(zonesData);
 }
@@ -218,7 +246,8 @@ function syncZonesToBackend() {
         id: z.id,
         points: z.points,
         classId: z.classId,
-        color: z.color
+        color: z.color,
+        label: z.label
     }));
 
     $.ajax({

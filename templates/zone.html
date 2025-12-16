@@ -59,7 +59,7 @@
             <!-- Tools Sidebar -->
             <section
                 class="w-full md:w-[280px] shrink-0 p-4 md:p-6 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
-                <div class="overflow-y-auto max-h-[calc(100vh-200px)]">
+                <div class="overflow-y-auto max-h-[calc(100vh-200px)] pr-3">
                     <h2 class="text-sm font-semibold text-text-color mb-4">Zone Selection</h2>
 
                     <!-- Zone List -->
@@ -79,16 +79,6 @@
                     </button>
 
                     <div class="space-y-4">
-                        <!-- Confidence Slider -->
-                        <div class="slider-confidence">
-                            <div class="confidence-info flex justify-between text-sm mb-2">
-                                <span class="text-secondary-text">Confidence Threshold</span>
-                                <span class="value-confidence text-text-color font-medium">40%</span>
-                            </div>
-                            <input type="range" id="confidenceSlider" value="40" min="1" max="100"
-                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
-                        </div>
-
                         <!-- Points Slider -->
                         <div class="slider">
                             <div class="point-info flex justify-between text-sm mb-2">
@@ -96,6 +86,16 @@
                                 <span class="value text-text-color font-medium">4</span>
                             </div>
                             <input type="range" value="4" min="2" max="8"
+                                class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
+                        </div>
+
+                        <!-- Confidence Slider -->
+                        <div class="slider-confidence">
+                            <div class="confidence-info flex justify-between text-sm mb-2">
+                                <span class="text-secondary-text">Confidence Threshold</span>
+                                <span class="value-confidence text-text-color font-medium">40%</span>
+                            </div>
+                            <input type="range" id="confidenceSlider" value="40" min="1" max="100"
                                 class="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color">
                         </div>
                     </div>
