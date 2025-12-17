@@ -32,7 +32,7 @@
             <button id="menu-btn-{{ job.id }}" onclick="toggleMenu(event, '{{ job.id }}')"
                 class="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-sidebar-menu-hover text-muted-foreground transition-opacity">
                 <div class="w-4 h-4 opacity-80 bg-text-color mask-icon"
-                    style="--mask-url: url('{{ url_for('static', filename='img/menu_dots.svg') }}');">
+                    style="--mask-url: url('{{ url_for('static', filename='img/icons/menu_dots.svg') }}');">
                 </div>
             </button>
         </div>
@@ -51,17 +51,16 @@
 
     <button onclick="toggleSidebar()"
         class="absolute top-4 left-4 p-1.5 rounded-md hover:bg-sidebar-accent transition-colors cursor-pointer">
-        <img src="{{ url_for('static', filename='img/sidebar.svg') }}"
+        <img src="{{ url_for('static', filename='img/icons/sidebar.svg') }}"
             class="w-5 h-5 invert dark-only-invert opacity-80">
     </button>
 
     <!-- Back Button -->
     <a href="{{ url_for('main') }}"
         class="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-text-color rounded-md hover:bg-sidebar-accent transition-colors">
-        <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-        </svg>
+        <div class="w-4 h-4 bg-current mask-icon"
+            style="--mask-url: url('{{ url_for('static', filename='img/icons/arrow-left.svg') }}');">
+        </div>
         Back
     </a>
 
@@ -112,11 +111,9 @@
         <!-- Webcam Button -->
         <button type="button" id="webcamBtn" onclick="useWebcam()"
             class="w-full flex items-center justify-center gap-3 px-6 py-3 border-2 border-dashed border-primary-border rounded-lg text-text-color hover:border-dropzone-accent hover:bg-dropzone-hover-bg transition-all cursor-pointer">
-            <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
+            <div class="w-6 h-6 bg-current mask-icon"
+                style="--mask-url: url('{{ url_for('static', filename='img/icons/webcam.svg') }}');">
+            </div>
             <span class="font-medium">Use Webcam</span>
         </button>
 
