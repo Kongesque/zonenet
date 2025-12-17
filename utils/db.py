@@ -30,80 +30,28 @@ def init_db():
         )
     ''')
     
-    # Simple migration for existing databases
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN name TEXT')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
+    # Define columns to add: (column_name, column_definition)
+    columns_to_add = [
+        ('name', 'TEXT'),
+        ('process_time', 'REAL'),
+        ('status', 'TEXT DEFAULT "pending"'),
+        ('target_class', 'INTEGER DEFAULT 19'),
+        ('confidence', 'INTEGER DEFAULT 35'),
+        ('detection_data', 'TEXT'),
+        ('progress', 'INTEGER DEFAULT 0'),
+        ('zones', 'TEXT'),
+        ('model', 'TEXT DEFAULT "yolo11n.pt"'),
+        ('tracker_config', 'TEXT')
+    ]
 
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN process_time REAL')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
-
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN status TEXT DEFAULT "pending"')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
-
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN target_class INTEGER DEFAULT 19')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
-
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN confidence INTEGER DEFAULT 35')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
-        
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN detection_data TEXT')
-    except sqlite3.OperationalError:
-        # Column likely already exists
-        pass
-        
+    for col_name, col_def in columns_to_add:
+        try:
+            conn.execute(f'ALTER TABLE jobs ADD COLUMN {col_name} {col_def}')
+        except sqlite3.OperationalError:
+            # Column likely already exists
+            pass
+            
     conn.commit()
-    conn.close()
-
-    # Add progress column
-    conn = get_db()
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN progress INTEGER DEFAULT 0')
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
-    conn.close()
-
-    # Add zones column for multiple zone support
-    conn = get_db()
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN zones TEXT')
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
-    conn.close()
-
-    # Add model column
-    conn = get_db()
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN model TEXT DEFAULT "yolo11n.pt"')
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
-    conn.close()
-
-    # Add tracker_config column for ByteTrack settings
-    conn = get_db()
-    try:
-        conn.execute('ALTER TABLE jobs ADD COLUMN tracker_config TEXT')
-        conn.commit()
-    except sqlite3.OperationalError:
-        pass
     conn.close()
 
 def create_job(task_id, filename, video_path):
@@ -126,23 +74,23 @@ def get_job(task_id):
         job_dict = dict(job)
         try:
             job_dict['points'] = json.loads(job_dict['points'])
-        except:
+        except (ValueError, TypeError):
             job_dict['points'] = []
              
         try:
              job_dict['color'] = json.loads(job_dict['color'])
-        except:
+        except (ValueError, TypeError):
              job_dict['color'] = [5, 189, 251]
              
         try:
              job_dict['detection_data'] = json.loads(job_dict['detection_data']) if job_dict['detection_data'] else []
-        except:
+        except (ValueError, TypeError):
              job_dict['detection_data'] = []
 
         # Parse zones JSON (for multiple zone support)
         try:
             job_dict['zones'] = json.loads(job_dict['zones']) if job_dict.get('zones') else []
-        except:
+        except (ValueError, TypeError):
             job_dict['zones'] = []
              
         # Ensure target_class is present (for old records)
@@ -168,7 +116,7 @@ def get_job(task_id):
         }
         try:
             job_dict['tracker_config'] = json.loads(job_dict['tracker_config']) if job_dict.get('tracker_config') else default_tracker_config
-        except:
+        except (ValueError, TypeError):
             job_dict['tracker_config'] = default_tracker_config
              
         return job_dict

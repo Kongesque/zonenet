@@ -90,7 +90,7 @@ def submit():
     
     try:
         zones = json.loads(zones_json)
-    except:
+    except (ValueError, TypeError):
         zones = job.get('zones', [])
     
     # Parse tracker config with defaults
@@ -104,7 +104,7 @@ def submit():
         tracker_config = json.loads(tracker_config_json)
         # Merge with defaults in case some fields are missing
         tracker_config = {**default_tracker_config, **tracker_config}
-    except:
+    except (ValueError, TypeError):
         tracker_config = default_tracker_config
     
     # Filter to only complete zones (with enough points)

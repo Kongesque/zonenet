@@ -63,6 +63,12 @@ This project uses `uv` for lightning-fast Python dependency management and `npm`
    npm run build
    ```
 
+5. **(Optional) Offline / Batch Model Setup:** 
+   If you plan to run ZoneNet in an offline environment or want to pre-download all model sizes (Nano to XLarge) at once:
+   ```bash
+   python download_models.py
+   ```
+
 ## 🎮 Usage
 
 1. **Start the application:**

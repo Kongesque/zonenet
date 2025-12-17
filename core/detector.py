@@ -80,9 +80,11 @@ def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt
             'track_buffer': 30
         }
     
-    # Generate custom ByteTrack YAML
-    tracker_yaml_path = f'uploads/outputs/bytetrack_{taskID}.yaml'
-    os.makedirs(os.path.dirname(tracker_yaml_path), exist_ok=True)
+    import tempfile
+    
+    # Generate custom ByteTrack YAML using a temporary file
+    tracker_yaml_file = tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False)
+    tracker_yaml_path = tracker_yaml_file.name
     
     tracker_yaml_content = f"""# Custom ByteTrack config for task {taskID}
 tracker_type: bytetrack
@@ -93,9 +95,16 @@ track_buffer: {int(tracker_config.get('track_buffer', 30))}
 match_thresh: {tracker_config.get('match_thresh', 0.8)}
 fuse_score: True
 """
-    with open(tracker_yaml_path, 'w') as f:
-        f.write(tracker_yaml_content)
+    tracker_yaml_file.write(tracker_yaml_content)
+    tracker_yaml_file.close()
+
+    try:
+        yield from _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_yaml_path)
+    finally:
+        if os.path.exists(tracker_yaml_path):
+            os.remove(tracker_yaml_path)
     
+def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_yaml_path):
     # Constants
     SOURCE_VIDEO = path_x
     DESTIN_VIDEO = 'uploads/outputs/' + 'output_' + taskID + '.mp4'
@@ -131,6 +140,7 @@ fuse_score: True
             import shutil
             # YOLO downloads to current directory
             if os.path.exists(model_name):
+                os.makedirs("weights", exist_ok=True)
                 shutil.move(model_name, model_path)
                 print(f"Moved {model_name} to {model_path}")
                 
