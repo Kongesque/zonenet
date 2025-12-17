@@ -8,7 +8,7 @@ from wtforms.validators import InputRequired
 import os
 from utils.processor import run_processing_pipeline
 from utils.file_handler import handle_upload, safe_remove_file, handle_rtsp_source
-from core.live_detector import live_detection, stop_live_stream, get_stream_counts, is_stream_running
+from core.live_detector import live_detection, stop_live_stream, get_stream_counts, get_stream_analytics, is_stream_running
 import cv2
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 from utils.coco_classes import COCO_CLASSES
@@ -244,6 +244,61 @@ def export_csv(task_id):
         headers={"Content-disposition": f"attachment; filename=zonenet_data_{task_id}.csv"}
     )
 
+@app.route('/api/export/<task_id>/json')
+def export_json(task_id):
+    """Export detection data with computed statistics as JSON."""
+    job = get_job(task_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+        
+    detection_data = job.get('detection_data', [])
+    zones = job.get('zones', [])
+    process_time = job.get('process_time', 0)
+    
+    # Calculate statistics per zone
+    zone_stats = {}
+    for event in detection_data:
+        zone_id = event.get('zone_id', 'default')
+        count = event.get('count', 0)
+        time = event.get('time', 0)
+        
+        if zone_id not in zone_stats:
+            zone_stats[zone_id] = {
+                'total': 0,
+                'peak': 0,
+                'peak_time': 0,
+                'events': []
+            }
+        
+        zone_stats[zone_id]['total'] = count  # Last count is total
+        if count > zone_stats[zone_id]['peak']:
+            zone_stats[zone_id]['peak'] = count
+            zone_stats[zone_id]['peak_time'] = time
+        zone_stats[zone_id]['events'].append({'time': time, 'count': count})
+    
+    # Calculate avg per minute
+    for zone_id, stats in zone_stats.items():
+        if process_time > 0:
+            stats['avg_per_minute'] = round(stats['total'] / (process_time / 60), 1)
+        else:
+            stats['avg_per_minute'] = 0
+    
+    export_data = {
+        'task_id': task_id,
+        'process_time': process_time,
+        'frame_width': job.get('frame_width'),
+        'frame_height': job.get('frame_height'),
+        'zones': zones,
+        'detection_data': detection_data,
+        'statistics': zone_stats
+    }
+    
+    return Response(
+        json.dumps(export_data, indent=2),
+        mimetype="application/json",
+        headers={"Content-disposition": f"attachment; filename=zonenet_data_{task_id}.json"}
+    )
+
 # ===== Live Camera/RTSP Routes =====
 
 @app.route('/camera', methods=['GET', 'POST'])
@@ -334,6 +389,14 @@ def live_counts(task_id):
     """Get current counts for a running stream."""
     counts = get_stream_counts(task_id)
     return jsonify({'counts': counts, 'running': is_stream_running(task_id)})
+
+@app.route('/api/live/<task_id>/analytics')
+def live_analytics(task_id):
+    """Get comprehensive analytics data for a running stream."""
+    analytics = get_stream_analytics(task_id)
+    if analytics is None:
+        return jsonify({'error': 'Stream not found'}), 404
+    return jsonify(analytics)
 
 @app.route('/api/camera/test', methods=['POST'])
 def test_camera_connection():

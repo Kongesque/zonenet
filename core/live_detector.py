@@ -60,6 +60,45 @@ def get_stream_counts(task_id):
     return {}
 
 
+def get_stream_analytics(task_id):
+    """Get comprehensive analytics data for a running stream."""
+    if task_id not in _active_streams:
+        return None
+    
+    stream = _active_streams[task_id]
+    start_time = stream.get('start_time', time.time())
+    elapsed = round(time.time() - start_time, 1)
+    history = stream.get('history', [])
+    counts = stream.get('counts', {})
+    peaks = stream.get('peak_counts', {})
+    
+    # Calculate rates (objects per minute based on last 60 seconds)
+    rates = {}
+    if len(history) >= 2:
+        # Get history from 60 seconds ago
+        cutoff_time = elapsed - 60
+        old_counts = {}
+        for h in history:
+            if h['time'] <= cutoff_time:
+                old_counts = h['counts']
+            else:
+                break
+        
+        for zone_id, current_count in counts.items():
+            old_count = old_counts.get(zone_id, 0)
+            rate_per_minute = (current_count - old_count) * (60.0 / min(60, elapsed))
+            rates[zone_id] = round(rate_per_minute, 1)
+    
+    return {
+        'counts': counts,
+        'peaks': peaks,
+        'rates': rates,
+        'history': history[-60:],  # Last 60 data points for chart
+        'elapsed': elapsed,
+        'running': stream.get('running', False)
+    }
+
+
 def live_detection(stream_url, zones, frame_size, task_id, conf=40, 
                    model_name='yolo11n.pt', tracker_config=None, source_type='rtsp'):
     """
@@ -103,10 +142,13 @@ fuse_score: True
     tracker_yaml_file.write(tracker_yaml_content)
     tracker_yaml_file.close()
     
-    # Initialize stream state
+    # Initialize stream state with analytics history
     _active_streams[task_id] = {
         'running': True,
-        'counts': {}
+        'counts': {},
+        'history': [],  # List of {time: seconds_since_start, counts: {zone_id: count}}
+        'peak_counts': {},  # {zone_id: {count: N, time: T}}
+        'start_time': time.time()
     }
     
     try:
@@ -296,8 +338,30 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
             text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))
             cv2.putText(frame, count_text, text_position, font, font_scale, text_color, font_thickness)
         
-        # Update global state
-        _active_streams[task_id]['counts'] = counts
+        # Update global state with history and peaks
+        stream_state = _active_streams[task_id]
+        stream_state['counts'] = counts
+        
+        # Record history snapshot (for rolling chart)
+        elapsed_time = round(time.time() - stream_state['start_time'], 1)
+        stream_state['history'].append({
+            'time': elapsed_time,
+            'counts': counts.copy()
+        })
+        
+        # Keep only last 120 seconds of history (2 minutes)
+        max_history_time = 120
+        stream_state['history'] = [
+            h for h in stream_state['history'] 
+            if h['time'] > elapsed_time - max_history_time
+        ]
+        
+        # Track peaks
+        for zone_id, count in counts.items():
+            if zone_id not in stream_state['peak_counts']:
+                stream_state['peak_counts'][zone_id] = {'count': 0, 'time': 0}
+            if count > stream_state['peak_counts'][zone_id]['count']:
+                stream_state['peak_counts'][zone_id] = {'count': count, 'time': elapsed_time}
         
         # Encode as JPEG
         _, jpeg = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 80])

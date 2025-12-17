@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
 
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
 {% block content %}
 <main id="content"
@@ -22,7 +25,8 @@
                 <span id="statusText" class="text-sm text-muted-foreground">Connecting...</span>
             </div>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-3">
+            <span id="elapsedTime" class="text-sm text-muted-foreground">00:00</span>
             <button id="stopBtn" onclick="stopStream()"
                 class="px-4 py-2 text-sm text-delete-text border border-delete-text/30 rounded-lg hover:bg-delete-text/10 transition-colors cursor-pointer">
                 Stop Stream
@@ -69,21 +73,36 @@
         </div>
 
         <!-- Analytics Sidebar -->
-        <div class="w-80 flex flex-col gap-4">
-            <!-- Zone Counts -->
+        <div class="w-80 flex flex-col gap-4 overflow-y-auto">
+            <!-- Rolling Chart -->
+            <div class="bg-dropzone-hover-bg rounded-lg p-4 border border-primary-border">
+                <h3 class="text-sm font-medium text-text-color mb-3">Live Trend (60s)</h3>
+                <div class="h-40">
+                    <canvas id="liveChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Zone Counts with Rate -->
             <div class="bg-dropzone-hover-bg rounded-lg p-4 border border-primary-border">
                 <h3 class="text-sm font-medium text-text-color mb-4">Live Counts</h3>
                 <div id="zoneCounts" class="space-y-3">
                     {% for zone in zones %}
-                    <div
-                        class="flex items-center justify-between p-3 bg-primary-color rounded-lg border border-primary-border">
-                        <div class="flex items-center gap-2">
-                            <div class="w-3 h-3 rounded-full zone-color-indicator"
-                                data-color="{{ zone.color | join(',') }}">
+                    <div class="p-3 bg-primary-color rounded-lg border border-primary-border">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-3 h-3 rounded-full zone-color-indicator"
+                                    data-color="{{ zone.color | join(',') }}" data-zone-id="{{ zone.id }}">
+                                </div>
+                                <span class="text-sm text-text-color">{{ zone.label or 'Zone ' ~ loop.index }}</span>
                             </div>
-                            <span class="text-sm text-text-color">{{ zone.label or 'Zone ' ~ loop.index }}</span>
+                            <div class="flex items-center gap-2">
+                                <span id="rate-{{ zone.id }}" class="text-xs text-muted-foreground">—/min</span>
+                                <span id="count-{{ zone.id }}" class="text-2xl font-bold text-dropzone-accent">0</span>
+                            </div>
                         </div>
-                        <span id="count-{{ zone.id }}" class="text-2xl font-bold text-dropzone-accent">0</span>
+                        <div class="flex justify-between text-xs text-muted-foreground">
+                            <span>Peak: <span id="peak-{{ zone.id }}" class="text-text-color">0</span></span>
+                        </div>
                     </div>
                     {% else %}
                     <p class="text-sm text-secondary-text italic">No zones configured</p>
@@ -121,16 +140,152 @@
 {% block scripts %}
 <script>
     const taskID = '{{ taskID }}';
-    let countEventSource = null;
     let streamActive = false;
+    let analyticsInterval = null;
+    let liveChart = null;
 
-    // Apply zone colors from data attributes
+    // Zone colors mapping
+    const zoneColors = {};
     document.querySelectorAll('.zone-color-indicator').forEach(el => {
         const color = el.dataset.color;
-        if (color) {
+        const zoneId = el.dataset.zoneId;
+        if (color && zoneId) {
+            zoneColors[zoneId] = `rgb(${color})`;
             el.style.backgroundColor = `rgb(${color})`;
         }
     });
+
+    // Initialize Chart.js rolling chart
+    function initChart() {
+        const ctx = document.getElementById('liveChart').getContext('2d');
+        liveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: []
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 0 },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        grid: { display: false },
+                        ticks: {
+                            color: '#9ca3af',
+                            maxTicksLimit: 5,
+                            callback: function (value, index, values) {
+                                return this.getLabelForValue(value) + 's';
+                            }
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: true,
+                        grid: { color: 'rgba(55, 65, 81, 0.3)' },
+                        ticks: { color: '#9ca3af', precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
+    // Format elapsed time as MM:SS
+    function formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    // Update chart with new data
+    function updateChart(history) {
+        if (!liveChart || !history || history.length === 0) return;
+
+        const labels = history.map(h => Math.round(h.time));
+        const zoneIds = new Set();
+        history.forEach(h => {
+            Object.keys(h.counts).forEach(id => zoneIds.add(id));
+        });
+
+        // Update or create datasets for each zone
+        const datasets = [];
+        zoneIds.forEach(zoneId => {
+            const data = history.map(h => h.counts[zoneId] || 0);
+            const color = zoneColors[zoneId] || '#1F6F65';
+            datasets.push({
+                label: zoneId,
+                data: data,
+                borderColor: color,
+                backgroundColor: color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: true,
+                tension: 0.3
+            });
+        });
+
+        liveChart.data.labels = labels;
+        liveChart.data.datasets = datasets;
+        liveChart.update('none');
+    }
+
+    // Poll for analytics updates
+    function startAnalyticsUpdates() {
+        if (analyticsInterval) clearInterval(analyticsInterval);
+
+        analyticsInterval = setInterval(function () {
+            if (!streamActive) return;
+
+            fetch(`/api/live/${taskID}/analytics`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) return;
+
+                    // Update elapsed time
+                    if (data.elapsed !== undefined) {
+                        document.getElementById('elapsedTime').textContent = formatTime(data.elapsed);
+                    }
+
+                    // Update counts
+                    if (data.counts) {
+                        for (const [zoneId, count] of Object.entries(data.counts)) {
+                            const el = document.getElementById(`count-${zoneId}`);
+                            if (el) el.textContent = count;
+                        }
+                    }
+
+                    // Update rates
+                    if (data.rates) {
+                        for (const [zoneId, rate] of Object.entries(data.rates)) {
+                            const el = document.getElementById(`rate-${zoneId}`);
+                            if (el) {
+                                const arrow = rate > 0 ? '↑' : rate < 0 ? '↓' : '';
+                                el.textContent = `${arrow}${Math.abs(rate)}/min`;
+                            }
+                        }
+                    }
+
+                    // Update peaks
+                    if (data.peaks) {
+                        for (const [zoneId, peak] of Object.entries(data.peaks)) {
+                            const el = document.getElementById(`peak-${zoneId}`);
+                            if (el) el.textContent = peak.count || 0;
+                        }
+                    }
+
+                    // Update chart
+                    if (data.history) {
+                        updateChart(data.history);
+                    }
+                })
+                .catch(err => console.log('Analytics update error:', err));
+        }, 1000);
+    }
 
     // Handle video load
     document.getElementById('live-video').onload = function () {
@@ -139,8 +294,8 @@
         document.getElementById('statusIndicator').className = 'status-indicator status-live';
         document.getElementById('statusText').textContent = 'Live';
 
-        // Start count updates
-        startCountUpdates();
+        initChart();
+        startAnalyticsUpdates();
     };
 
     function handleStreamError() {
@@ -151,33 +306,11 @@
         document.getElementById('stoppedOverlay').classList.remove('hidden');
     }
 
-    function startCountUpdates() {
-        if (countEventSource) {
-            countEventSource.close();
-        }
-
-        // Poll for count updates
-        setInterval(function () {
-            if (!streamActive) return;
-
-            fetch(`/api/live/${taskID}/counts`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.counts) {
-                        for (const [zoneId, count] of Object.entries(data.counts)) {
-                            const el = document.getElementById(`count-${zoneId}`);
-                            if (el) el.textContent = count;
-                        }
-                    }
-                })
-                .catch(err => console.log('Count update error:', err));
-        }, 1000);
-    }
-
     function stopStream() {
         fetch(`/api/live/${taskID}/stop`, { method: 'POST' })
             .then(() => {
                 streamActive = false;
+                if (analyticsInterval) clearInterval(analyticsInterval);
                 document.getElementById('live-video').src = '';
                 document.getElementById('statusIndicator').className = 'status-indicator status-stopped';
                 document.getElementById('statusText').textContent = 'Stopped';
@@ -190,16 +323,15 @@
         document.getElementById('connectingOverlay').classList.remove('hidden');
         document.getElementById('statusIndicator').className = 'status-indicator status-connecting';
         document.getElementById('statusText').textContent = 'Connecting...';
+        document.getElementById('elapsedTime').textContent = '00:00';
 
-        // Restart by reloading the img src
         const video = document.getElementById('live-video');
         video.src = `/api/live/${taskID}/stream?t=${Date.now()}`;
     }
 
     // Cleanup on page unload
     window.onbeforeunload = function () {
-        if (countEventSource) countEventSource.close();
-        // Optionally stop the stream
+        if (analyticsInterval) clearInterval(analyticsInterval);
         navigator.sendBeacon(`/api/live/${taskID}/stop`);
     };
 </script>
