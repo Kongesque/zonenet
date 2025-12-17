@@ -202,4 +202,40 @@
         -webkit-mask-image: var(--mask-url);
         mask-image: var(--mask-url);
     }
+
+    /* Live Stream Page */
+    #live-video {
+        max-width: 100%;
+        height: auto;
+        border-radius: 0.5rem;
+    }
+
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+    }
+
+    .status-live {
+        background-color: #22c55e;
+    }
+
+    .status-connecting {
+        background-color: #eab308;
+    }
+
+    .status-stopped {
+        background-color: #6b7280;
+        animation: none;
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
 }

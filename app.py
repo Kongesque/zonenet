@@ -7,7 +7,9 @@ from wtforms import FileField, SubmitField
 from wtforms.validators import InputRequired
 import os
 from utils.processor import run_processing_pipeline
-from utils.file_handler import handle_upload, safe_remove_file
+from utils.file_handler import handle_upload, safe_remove_file, handle_rtsp_source
+from core.live_detector import live_detection, stop_live_stream, get_stream_counts, is_stream_running
+import cv2
 from utils.db import init_db, get_job, update_job, get_all_jobs, delete_job
 from utils.coco_classes import COCO_CLASSES
 
@@ -112,7 +114,12 @@ def submit():
 
     update_job(taskID, zones=complete_zones, confidence=confidence, model=model, tracker_config=tracker_config)
     
-    # Process the video with zones
+    # Check if this is a live source (RTSP/webcam) vs file
+    if job.get('source_type') in ('rtsp', 'webcam'):
+        # For live sources, redirect to live view (no pre-processing needed)
+        return redirect(url_for('live_view', task_id=taskID))
+    
+    # For file sources, process the video with zones
     run_processing_pipeline(taskID, job, complete_zones, confidence, model, tracker_config)
 
     return redirect(url_for('result', taskID=taskID))
@@ -237,5 +244,123 @@ def export_csv(task_id):
         headers={"Content-disposition": f"attachment; filename=zonenet_data_{task_id}.csv"}
     )
 
+# ===== Live Camera/RTSP Routes =====
+
+@app.route('/camera', methods=['GET', 'POST'])
+def camera():
+    """Page to enter RTSP URL or select webcam."""
+    error = None
+    
+    if request.method == 'POST':
+        stream_url = request.form.get('stream_url', '').strip()
+        source_type = request.form.get('source_type', 'rtsp')
+        
+        if not stream_url:
+            error = 'Please enter a stream URL'
+        else:
+            try:
+                taskID = handle_rtsp_source(stream_url, source_type)
+                session['taskID'] = taskID
+                return redirect(url_for('zone', taskID=taskID))
+            except ValueError as e:
+                error = str(e)
+            except Exception as e:
+                error = f'Connection failed: {str(e)}'
+    
+    return render_template('camera.html', error=error)
+
+@app.route('/live/<task_id>')
+def live_view(task_id):
+    """Live monitoring page with real-time video feed."""
+    job = get_job(task_id)
+    if not job:
+        return redirect(url_for('main'))
+    
+    # Only allow live view for stream sources
+    if job.get('source_type') == 'file':
+        return redirect(url_for('result', taskID=task_id))
+    
+    session['taskID'] = task_id
+    
+    return render_template('live.html', 
+                          taskID=task_id,
+                          zones=job.get('zones', []),
+                          width=job.get('frame_width'),
+                          height=job.get('frame_height'),
+                          source_type=job.get('source_type'))
+
+@app.route('/api/live/<task_id>/stream')
+def live_stream(task_id):
+    """MJPEG stream endpoint for live video feed."""
+    job = get_job(task_id)
+    if not job or not job.get('stream_url'):
+        return 'Stream not found', 404
+    
+    zones = job.get('zones', [])
+    frame_size = (job.get('frame_width', 1280), job.get('frame_height', 720))
+    conf = job.get('confidence', DEFAULT_CONFIDENCE)
+    model = job.get('model', 'yolo11n.pt')
+    tracker_config = job.get('tracker_config')
+    source_type = job.get('source_type', 'rtsp')
+    
+    def generate():
+        try:
+            for jpeg_bytes, counts in live_detection(
+                job['stream_url'],
+                zones,
+                frame_size,
+                task_id,
+                conf,
+                model,
+                tracker_config,
+                source_type
+            ):
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + jpeg_bytes + b'\r\n')
+        except Exception as e:
+            print(f'Stream error: {e}')
+    
+    return Response(generate(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/api/live/<task_id>/stop', methods=['POST'])
+def stop_stream(task_id):
+    """Stop a live stream."""
+    stop_live_stream(task_id)
+    return jsonify({'success': True})
+
+@app.route('/api/live/<task_id>/counts')
+def live_counts(task_id):
+    """Get current counts for a running stream."""
+    counts = get_stream_counts(task_id)
+    return jsonify({'counts': counts, 'running': is_stream_running(task_id)})
+
+@app.route('/api/camera/test', methods=['POST'])
+def test_camera_connection():
+    """Test connection to an RTSP stream."""
+    data = request.get_json()
+    stream_url = data.get('stream_url', '').strip()
+    
+    if not stream_url:
+        return jsonify({'success': False, 'error': 'No URL provided'})
+    
+    try:
+        cap = cv2.VideoCapture(stream_url)
+        success = False
+        for _ in range(30):  # Try for ~1 second
+            success, frame = cap.read()
+            if success:
+                break
+        
+        if success:
+            height, width = frame.shape[:2]
+            cap.release()
+            return jsonify({'success': True, 'width': width, 'height': height})
+        else:
+            cap.release()
+            return jsonify({'success': False, 'error': 'Could not read frame from stream'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, threaded=True)

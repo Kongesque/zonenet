@@ -41,7 +41,9 @@ def init_db():
         ('progress', 'INTEGER DEFAULT 0'),
         ('zones', 'TEXT'),
         ('model', 'TEXT DEFAULT "yolo11n.pt"'),
-        ('tracker_config', 'TEXT')
+        ('tracker_config', 'TEXT'),
+        ('source_type', 'TEXT DEFAULT "file"'),
+        ('stream_url', 'TEXT')
     ]
 
     for col_name, col_def in columns_to_add:
@@ -118,6 +120,10 @@ def get_job(task_id):
             job_dict['tracker_config'] = json.loads(job_dict['tracker_config']) if job_dict.get('tracker_config') else default_tracker_config
         except (ValueError, TypeError):
             job_dict['tracker_config'] = default_tracker_config
+
+        # Ensure source_type is present (for old records)
+        if 'source_type' not in job_dict or job_dict['source_type'] is None:
+            job_dict['source_type'] = 'file'
              
         return job_dict
     return None

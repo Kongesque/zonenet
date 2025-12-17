@@ -1,0 +1,206 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<main id="content"
+    class="relative flex-1 flex flex-col mx-2 mt-0 mb-2 overflow-auto bg-primary-color border border-primary-border rounded-md">
+
+    <!-- Header Bar -->
+    <div class="flex items-center justify-between p-4 border-b border-primary-border">
+        <div class="flex items-center gap-3">
+            <a href="{{ url_for('main') }}"
+                class="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-text-color rounded-md hover:bg-sidebar-accent transition-colors">
+                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back
+            </a>
+            <div class="h-4 w-px bg-primary-border"></div>
+            <div class="flex items-center gap-2">
+                <div id="statusIndicator" class="status-indicator status-connecting"></div>
+                <span id="statusText" class="text-sm text-muted-foreground">Connecting...</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <button id="stopBtn" onclick="stopStream()"
+                class="px-4 py-2 text-sm text-delete-text border border-delete-text/30 rounded-lg hover:bg-delete-text/10 transition-colors cursor-pointer">
+                Stop Stream
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex gap-4 p-4 overflow-auto">
+        <!-- Video Feed -->
+        <div class="flex-1 flex flex-col">
+            <div id="videoContainer" class="relative bg-black rounded-lg overflow-hidden" style="aspect-ratio: 16/9;">
+                <img id="live-video" src="/api/live/{{ taskID }}/stream" alt="Live Stream"
+                    class="w-full h-full object-contain" onerror="handleStreamError()">
+
+                <!-- Connecting Overlay -->
+                <div id="connectingOverlay" class="absolute inset-0 flex items-center justify-center bg-black/80">
+                    <div class="text-center">
+                        <div
+                            class="w-12 h-12 border-4 border-dropzone-accent border-t-transparent rounded-full animate-spin mx-auto mb-4">
+                        </div>
+                        <p class="text-white">Connecting to stream...</p>
+                    </div>
+                </div>
+
+                <!-- Stopped Overlay -->
+                <div id="stoppedOverlay" class="hidden absolute inset-0 flex items-center justify-center bg-black/80">
+                    <div class="text-center">
+                        <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                        </svg>
+                        <p class="text-white mb-4">Stream Stopped</p>
+                        <button onclick="restartStream()"
+                            class="px-6 py-2 bg-dropzone-accent text-white rounded-lg hover:opacity-90 transition-opacity">
+                            Restart Stream
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Sidebar -->
+        <div class="w-80 flex flex-col gap-4">
+            <!-- Zone Counts -->
+            <div class="bg-dropzone-hover-bg rounded-lg p-4 border border-primary-border">
+                <h3 class="text-sm font-medium text-text-color mb-4">Live Counts</h3>
+                <div id="zoneCounts" class="space-y-3">
+                    {% for zone in zones %}
+                    <div
+                        class="flex items-center justify-between p-3 bg-primary-color rounded-lg border border-primary-border">
+                        <div class="flex items-center gap-2">
+                            <div class="w-3 h-3 rounded-full zone-color-indicator"
+                                data-color="{{ zone.color | join(',') }}">
+                            </div>
+                            <span class="text-sm text-text-color">{{ zone.label or 'Zone ' ~ loop.index }}</span>
+                        </div>
+                        <span id="count-{{ zone.id }}" class="text-2xl font-bold text-dropzone-accent">0</span>
+                    </div>
+                    {% else %}
+                    <p class="text-sm text-secondary-text italic">No zones configured</p>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Stream Info -->
+            <div class="bg-dropzone-hover-bg rounded-lg p-4 border border-primary-border">
+                <h3 class="text-sm font-medium text-text-color mb-3">Stream Info</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Resolution</span>
+                        <span class="text-text-color">{{ width or '—' }} × {{ height or '—' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-muted-foreground">Source</span>
+                        <span class="text-text-color">{{ 'Webcam' if source_type == 'webcam' else 'RTSP' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="mt-auto space-y-2">
+                <a href="{{ url_for('zone', taskID=taskID) }}"
+                    class="block w-full px-4 py-2 text-center text-sm text-muted-foreground border border-primary-border rounded-lg hover:text-text-color hover:border-dropzone-accent transition-colors">
+                    Edit Zones
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const taskID = '{{ taskID }}';
+    let countEventSource = null;
+    let streamActive = false;
+
+    // Apply zone colors from data attributes
+    document.querySelectorAll('.zone-color-indicator').forEach(el => {
+        const color = el.dataset.color;
+        if (color) {
+            el.style.backgroundColor = `rgb(${color})`;
+        }
+    });
+
+    // Handle video load
+    document.getElementById('live-video').onload = function () {
+        streamActive = true;
+        document.getElementById('connectingOverlay').classList.add('hidden');
+        document.getElementById('statusIndicator').className = 'status-indicator status-live';
+        document.getElementById('statusText').textContent = 'Live';
+
+        // Start count updates
+        startCountUpdates();
+    };
+
+    function handleStreamError() {
+        streamActive = false;
+        document.getElementById('statusIndicator').className = 'status-indicator status-stopped';
+        document.getElementById('statusText').textContent = 'Disconnected';
+        document.getElementById('connectingOverlay').classList.add('hidden');
+        document.getElementById('stoppedOverlay').classList.remove('hidden');
+    }
+
+    function startCountUpdates() {
+        if (countEventSource) {
+            countEventSource.close();
+        }
+
+        // Poll for count updates
+        setInterval(function () {
+            if (!streamActive) return;
+
+            fetch(`/api/live/${taskID}/counts`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.counts) {
+                        for (const [zoneId, count] of Object.entries(data.counts)) {
+                            const el = document.getElementById(`count-${zoneId}`);
+                            if (el) el.textContent = count;
+                        }
+                    }
+                })
+                .catch(err => console.log('Count update error:', err));
+        }, 1000);
+    }
+
+    function stopStream() {
+        fetch(`/api/live/${taskID}/stop`, { method: 'POST' })
+            .then(() => {
+                streamActive = false;
+                document.getElementById('live-video').src = '';
+                document.getElementById('statusIndicator').className = 'status-indicator status-stopped';
+                document.getElementById('statusText').textContent = 'Stopped';
+                document.getElementById('stoppedOverlay').classList.remove('hidden');
+            });
+    }
+
+    function restartStream() {
+        document.getElementById('stoppedOverlay').classList.add('hidden');
+        document.getElementById('connectingOverlay').classList.remove('hidden');
+        document.getElementById('statusIndicator').className = 'status-indicator status-connecting';
+        document.getElementById('statusText').textContent = 'Connecting...';
+
+        // Restart by reloading the img src
+        const video = document.getElementById('live-video');
+        video.src = `/api/live/${taskID}/stream?t=${Date.now()}`;
+    }
+
+    // Cleanup on page unload
+    window.onbeforeunload = function () {
+        if (countEventSource) countEventSource.close();
+        // Optionally stop the stream
+        navigator.sendBeacon(`/api/live/${taskID}/stop`);
+    };
+</script>
+{% endblock %}

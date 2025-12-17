@@ -16,6 +16,7 @@ ZoneNet is a professional-grade **Computer Vision** application designed for pre
 - **Adjustable Confidence**: Fine-tune detection sensitivity with a built-in confidence threshold slider (Default: 35%).
 - **Accurate Tracking**: Uses **ByteTrack** for robust object tracking and consistency.
 - **Real-time Detection**: Powered by the state-of-the-art **YOLO11** model for low-latency processing.
+- **Live Camera Support 📹**: Connect to RTSP streams or webcams for real-time monitoring and counting.
 - **Real-time Analytics 📊**: View object counting trends over time with interactive charts for actionable insights.
 - **Data Export 💾**: Download your detection data as CSV for offline analysis and reporting.
 - **History & Management**: Automatically saves processed jobs. Rename or delete past tasks easily.
