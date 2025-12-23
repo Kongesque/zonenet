@@ -55,5 +55,4 @@ def run_processing_pipeline(taskID, job, zones, confidence, model='yolo11n.pt', 
                detection_data=final_detection_events, dwell_data=final_dwell_events,
                line_crossing_data=final_line_crossing_counts)
     
-
-    clear_all_uploads()  # Remove all frames in frames folder
+    # clear_all_uploads()  # Commented out to prevent deleting frames needed by the frontend for results/editing
