@@ -1,36 +1,24 @@
 services:
-  zonenet:
-    build: .
+  # FastAPI Backend
+  backend:
+    build: ./backend
     ports:
-      - "5000:5000"
+      - "8000:8000"
     volumes:
-      # Persist uploads and processed outputs
-      - ./uploads:/app/uploads
-      # Persist YOLO model weights (auto-downloaded)
-      - ./weights:/app/weights
-      # Persist task database
-      - ./instance:/app/instance
+      - ./backend/uploads:/app/uploads
+      - ./backend/weights:/app/weights
+      - ./backend/instance:/app/instance
     environment:
-      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
     restart: unless-stopped
 
-  # GPU-enabled version (uncomment to use)
-  # Requires: NVIDIA GPU + nvidia-container-toolkit
-  # zonenet-gpu:
-  #   build: .
-  #   ports:
-  #     - "5000:5000"
-  #   volumes:
-  #     - ./uploads:/app/uploads
-  #     - ./weights:/app/weights
-  #     - ./instance:/app/instance
-  #   environment:
-  #     - FLASK_ENV=production
-  #   deploy:
-  #     resources:
-  #       reservations:
-  #         devices:
-  #           - driver: nvidia
-  #             count: 1
-  #             capabilities: [gpu]
-  #   restart: unless-stopped
+  # Next.js Frontend
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    restart: unless-stopped

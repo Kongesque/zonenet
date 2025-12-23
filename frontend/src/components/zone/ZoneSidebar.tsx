@@ -1,0 +1,366 @@
+"use client";
+
+import { Plus, Trash2, ChevronDown } from "lucide-react";
+import type { Zone } from "@/utils/types";
+import { COCO_CLASSES } from "@/utils/types";
+
+interface ZoneSidebarProps {
+    zones: Zone[];
+    activeZoneId: string | null;
+    maxPoints: number;
+    confidence: number;
+    model: string;
+    trackerConfig: {
+        track_high_thresh: number;
+        track_low_thresh: number;
+        match_thresh: number;
+        track_buffer: number;
+    };
+    onZoneSelect: (zoneId: string) => void;
+    onZoneAdd: () => void;
+    onZoneDelete: (zoneId: string) => void;
+    onZoneClassChange: (zoneId: string, classId: number) => void;
+    onZoneLabelChange: (zoneId: string, label: string) => void;
+    onMaxPointsChange: (value: number) => void;
+    onConfidenceChange: (value: number) => void;
+    onModelChange: (value: string) => void;
+    onTrackerConfigChange: (config: {
+        track_high_thresh: number;
+        track_low_thresh: number;
+        match_thresh: number;
+        track_buffer: number;
+    }) => void;
+    onProcess: () => void;
+    isProcessing: boolean;
+}
+
+function getColorFromClassId(classId: number): string {
+    const hue = ((classId * 137.508) % 360);
+    return `hsl(${hue}, 85%, 55%)`;
+}
+
+const MODEL_OPTIONS = [
+    { value: "yolo11n.pt", label: "YOLO11n (Fastest)", short: "Fastest" },
+    { value: "yolo11s.pt", label: "YOLO11s (Fast)", short: "Fast" },
+    { value: "yolo11m.pt", label: "YOLO11m (Balanced)", short: "Balanced" },
+    { value: "yolo11l.pt", label: "YOLO11l (Accurate)", short: "Accurate" },
+    { value: "yolo11x.pt", label: "YOLO11x (Most Accurate)", short: "Most Accurate" },
+];
+
+export function ZoneSidebar({
+    zones,
+    activeZoneId,
+    maxPoints,
+    confidence,
+    model,
+    trackerConfig,
+    onZoneSelect,
+    onZoneAdd,
+    onZoneDelete,
+    onZoneClassChange,
+    onZoneLabelChange,
+    onMaxPointsChange,
+    onConfidenceChange,
+    onModelChange,
+    onTrackerConfigChange,
+    onProcess,
+    isProcessing,
+}: ZoneSidebarProps) {
+    const [showAdvanced, setShowAdvanced] = useState(false);
+
+    const selectedModel = MODEL_OPTIONS.find((m) => m.value === model);
+
+    const handleTrackerSliderChange = (
+        key: keyof typeof trackerConfig,
+        rawValue: number
+    ) => {
+        const value =
+            key === "track_buffer" ? rawValue : rawValue / 100;
+        onTrackerConfigChange({
+            ...trackerConfig,
+            [key]: value,
+        });
+    };
+
+    const resetTrackerDefaults = () => {
+        onTrackerConfigChange({
+            track_high_thresh: 0.45,
+            track_low_thresh: 0.1,
+            match_thresh: 0.8,
+            track_buffer: 30,
+        });
+    };
+
+    const canProcess = zones.some((z) => z.points.length >= 2);
+
+    return (
+        <section className="w-full md:w-[280px] shrink-0 p-2 md:p-4 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
+            <div className="overflow-y-auto max-h-[calc(100vh-200px)] p-3">
+                <h2 className="text-sm font-semibold text-text-color mb-4">
+                    Zone Selection
+                </h2>
+
+                {/* Zone List */}
+                <div className="space-y-4 mb-4">
+                    {zones.map((zone) => (
+                        <div
+                            key={zone.id}
+                            className={`p-3 rounded-lg border cursor-pointer transition-all ${activeZoneId === zone.id
+                                    ? "border-text-color bg-sidebar-item-hover"
+                                    : "border-btn-border hover:border-gray-400"
+                                }`}
+                            onClick={() => onZoneSelect(zone.id)}
+                        >
+                            <div className="flex items-center justify-between mb-2">
+                                <div className="flex items-center gap-2">
+                                    <div
+                                        className="w-3 h-3 rounded-full"
+                                        style={{ backgroundColor: getColorFromClassId(zone.classId) }}
+                                    />
+                                    <input
+                                        type="text"
+                                        value={zone.label}
+                                        onChange={(e) => onZoneLabelChange(zone.id, e.target.value)}
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="bg-transparent text-sm text-text-color font-medium border-none outline-none w-24"
+                                    />
+                                </div>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onZoneDelete(zone.id);
+                                    }}
+                                    className="p-1 hover:bg-delete-text/20 rounded text-delete-text"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-secondary-text">Target:</span>
+                                <select
+                                    value={zone.classId}
+                                    onChange={(e) =>
+                                        onZoneClassChange(zone.id, Number(e.target.value))
+                                    }
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 bg-btn-bg text-text-color text-xs border border-btn-border rounded px-2 py-1"
+                                >
+                                    {Object.entries(COCO_CLASSES).map(([id, name]) => (
+                                        <option key={id} value={id}>
+                                            {name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="text-xs text-secondary-text mt-2">
+                                {zone.points.length} / {maxPoints} points
+                                {zone.points.length === 2 && " (Line)"}
+                                {zone.points.length >= 3 && " (Polygon)"}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Add Zone Button */}
+                <button
+                    onClick={onZoneAdd}
+                    className="w-full py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer flex items-center justify-center gap-2 mb-4"
+                >
+                    <Plus className="w-4 h-4" />
+                    Add Zone
+                </button>
+
+                <div className="space-y-4">
+                    {/* Points Slider */}
+                    <div>
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-secondary-text">Points</span>
+                            <span className="text-text-color font-medium">{maxPoints}</span>
+                        </div>
+                        <input
+                            type="range"
+                            value={maxPoints}
+                            min={2}
+                            max={8}
+                            onChange={(e) => onMaxPointsChange(Number(e.target.value))}
+                            className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                        />
+                    </div>
+
+                    {/* Confidence Slider */}
+                    <div>
+                        <div className="flex justify-between text-sm mb-2">
+                            <span className="text-secondary-text">Confidence Threshold</span>
+                            <span className="text-text-color font-medium">{confidence}%</span>
+                        </div>
+                        <input
+                            type="range"
+                            value={confidence}
+                            min={1}
+                            max={100}
+                            onChange={(e) => onConfidenceChange(Number(e.target.value))}
+                            className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                        />
+                    </div>
+                </div>
+
+                {/* Model Selection */}
+                <div className="mt-4">
+                    <div className="flex justify-between text-sm mb-2">
+                        <span className="text-secondary-text">Model</span>
+                        <span className="text-text-color font-medium">
+                            {selectedModel?.short}
+                        </span>
+                    </div>
+                    <select
+                        value={model}
+                        onChange={(e) => onModelChange(e.target.value)}
+                        className="w-full bg-btn-bg text-text-color border border-btn-border rounded-lg p-1.5 text-xs"
+                    >
+                        {MODEL_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+
+                {/* Advanced Settings */}
+                <div className="mt-4">
+                    <button
+                        onClick={() => setShowAdvanced(!showAdvanced)}
+                        className="w-full flex items-center justify-between text-xs text-secondary-text hover:text-text-color transition-colors cursor-pointer py-2"
+                    >
+                        <span className="flex items-center gap-2">
+                            Advanced Tracking Settings
+                        </span>
+                        <ChevronDown
+                            className={`w-4 h-4 transition-transform ${showAdvanced ? "rotate-180" : ""
+                                }`}
+                        />
+                    </button>
+
+                    {showAdvanced && (
+                        <div className="mt-3 space-y-4 pl-3 border-l-2 border-btn-border">
+                            {/* Detection Quality */}
+                            <div>
+                                <div className="flex justify-between text-xs mb-1.5">
+                                    <span className="text-secondary-text">Detection Quality</span>
+                                    <span className="text-text-color font-medium">
+                                        {trackerConfig.track_high_thresh.toFixed(2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    value={trackerConfig.track_high_thresh * 100}
+                                    min={10}
+                                    max={90}
+                                    step={5}
+                                    onChange={(e) =>
+                                        handleTrackerSliderChange(
+                                            "track_high_thresh",
+                                            Number(e.target.value)
+                                        )
+                                    }
+                                    className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                                />
+                            </div>
+
+                            {/* Recovery Sensitivity */}
+                            <div>
+                                <div className="flex justify-between text-xs mb-1.5">
+                                    <span className="text-secondary-text">Recovery Sensitivity</span>
+                                    <span className="text-text-color font-medium">
+                                        {trackerConfig.track_low_thresh.toFixed(2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    value={trackerConfig.track_low_thresh * 100}
+                                    min={1}
+                                    max={50}
+                                    onChange={(e) =>
+                                        handleTrackerSliderChange(
+                                            "track_low_thresh",
+                                            Number(e.target.value)
+                                        )
+                                    }
+                                    className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                                />
+                            </div>
+
+                            {/* Match Threshold */}
+                            <div>
+                                <div className="flex justify-between text-xs mb-1.5">
+                                    <span className="text-secondary-text">Match Threshold</span>
+                                    <span className="text-text-color font-medium">
+                                        {trackerConfig.match_thresh.toFixed(2)}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    value={trackerConfig.match_thresh * 100}
+                                    min={30}
+                                    max={95}
+                                    step={5}
+                                    onChange={(e) =>
+                                        handleTrackerSliderChange(
+                                            "match_thresh",
+                                            Number(e.target.value)
+                                        )
+                                    }
+                                    className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                                />
+                            </div>
+
+                            {/* Track Memory */}
+                            <div>
+                                <div className="flex justify-between text-xs mb-1.5">
+                                    <span className="text-secondary-text">Track Memory</span>
+                                    <span className="text-text-color font-medium">
+                                        {trackerConfig.track_buffer}
+                                    </span>
+                                </div>
+                                <input
+                                    type="range"
+                                    value={trackerConfig.track_buffer}
+                                    min={10}
+                                    max={120}
+                                    step={5}
+                                    onChange={(e) =>
+                                        handleTrackerSliderChange("track_buffer", Number(e.target.value))
+                                    }
+                                    className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
+                                />
+                            </div>
+
+                            <button
+                                onClick={resetTrackerDefaults}
+                                className="w-full text-xs text-secondary-text hover:text-text-color transition-colors py-1.5 cursor-pointer"
+                            >
+                                Reset to defaults
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Process Button */}
+            <button
+                onClick={onProcess}
+                disabled={!canProcess || isProcessing}
+                className={`w-full py-3 rounded-md text-sm font-medium transition-all ${canProcess && !isProcessing
+                        ? "btn-primary"
+                        : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                    }`}
+            >
+                {isProcessing ? "Processing..." : "Process"}
+            </button>
+        </section>
+    );
+}
+
+// Add useState import
+import { useState } from "react";

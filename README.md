@@ -3,151 +3,120 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![YOLO11](https://img.shields.io/badge/YOLO-11-green)
+![Next.js 15](https://img.shields.io/badge/Next.js-15-black)
 
-ZoneNet is a professional-grade **Computer Vision** application designed for precise **Real-time Object Counting** and **Video Analytics**. Leveraging the power of **YOLO11** and **ByteTrack**, it allows users to define **Custom Regions of Interest (ROI)** for accurate tracking in retail, traffic management, livestock management,and industrial safety scenarios. Built with Flask and Tailwind CSS, it offers a seamless, local-first solution for data-driven insights.
+ZoneNet is a professional-grade **Computer Vision** application for **Real-time Object Counting** and **Video Analytics**. Using **YOLO11** and **ByteTrack**, it enables **Custom Regions of Interest (ROI)** for accurate tracking in retail, traffic, livestock, and industrial scenarios.
 
 ![ZoneNet AI Object Counting Demo with Custom Polygon Zones](demo/demo.gif)
 
 ## 🚀 Features
 
-- **Custom Region of Interest (ROI)**: Draw specific polygons on your video to precision-count objects only within defined areas. Perfect for specific lane counting or zone monitoring.
-- **Line Crossing Counter 🚶**: Draw a 2-point line to track entries and exits with **IN/OUT direction detection**. Perfect for doorway counting, traffic lanes, and occupancy tracking.
-- **Dynamic Object Selection**: Select ANY of the 80 COCO classes (Person, Car, Bicycle, etc.) to track and count. No code changes required!
-- **Model Selection**: Switch between YOLO11 Nano (fastest) to XLarge (most accurate) depending on your needs.
-- **Adjustable Confidence**: Fine-tune detection sensitivity with a built-in confidence threshold slider (Default: 35%).
-- **Accurate Tracking**: Uses **ByteTrack** for robust object tracking and consistency.
-- **Real-time Detection**: Powered by the state-of-the-art **YOLO11** model for low-latency processing.
-- **Live Camera Support 📹**: Connect to RTSP streams or webcams for real-time monitoring and counting.
-- **Advanced Analytics 📊**: 
-  - Rolling time-series charts with peak detection markers
-  - Rate-of-change indicators (objects/min)
-  - **Alert Thresholds**: Visual + audio alerts when counts exceed set limits
-  - **Dwell Time Analysis**: Track how long objects remain in zones
-  - **Activity Heatmaps**: Visualize busy periods with color-coded intensity
-- **Data Export 💾**: Download detection data as **CSV** or **JSON** (includes computed statistics).
-- **History & Management**: Automatically saves processed jobs. Rename or delete past tasks easily.
-- **Privacy-First**: All processing happens locally on your machine. No video data is sent to the cloud.
-
-## 🎯 Target Use Cases
-
-- **Retail Analytics**: Count customer footfall in specific store aisles or entryways.
-- **Traffic Management**: Monitor vehicle flow, classify vehicle types (cars, trucks, buses), and analyze lane usage.
-- **Industrial Safety**: Monitor restricted zones for unauthorized personnel entry.
-- **Smart Cities**: Analyze usage of public spaces, parks, and walkways.
-- **Livestock Monitoring**: Track and count animals (cows, sheep) in fields or enclosures.
+- **Custom ROI**: Draw polygons to count objects only in specific areas
+- **Line Crossing Counter**: 2-point lines with **IN/OUT direction detection**
+- **80 COCO Classes**: Select any object type (Person, Car, etc.)
+- **Model Selection**: YOLO11 Nano to XLarge
+- **Live Camera Support**: RTSP streams and webcams
+- **Dwell Time Analysis**: Track how long objects stay in zones
+- **Data Export**: CSV and JSON formats
+- **Privacy-First**: All processing happens locally
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Python, Flask, SQLite (for job persistence)
-- **AI/ML**: OpenCV, Ultralytics YOLO11, ByteTrack
-- **Frontend**: Tailwind CSS v4, Jinja2, Vanilla JS
-- **Package Management**: [uv](https://github.com/astral-sh/uv) (Python), npm (CSS)
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | Next.js 15, React 19, TypeScript, Tailwind CSS v4 |
+| **Backend** | FastAPI, Python 3.10+ |
+| **AI/ML** | YOLO11, ByteTrack, OpenCV |
+| **Database** | SQLite |
 
-## 🐳 Docker Quick Start
+## 📦 Project Structure
 
-The fastest way to run ZoneNet. Requires [Docker](https://docs.docker.com/get-docker/).
+```
+ZoneNet/
+├── frontend/                 # Next.js application
+│   ├── src/app/             # Pages (home, zone, result, camera, live)
+│   ├── src/components/      # React components
+│   └── src/utils/           # API client, types
+│
+├── backend/                  # FastAPI application
+│   ├── app/
+│   │   ├── api/routes/      # API endpoints (jobs, camera, system)
+│   │   ├── core/            # YOLO11 detection logic
+│   │   ├── models/          # Pydantic schemas
+│   │   └── services/        # DB, file handling, processing
+│   └── pyproject.toml       # Python dependencies
+│
+├── docker-compose.yml        # Container orchestration
+└── README.md
+```
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.10+
+- Node.js 18+
+- [uv](https://github.com/astral-sh/uv) (Python package manager)
+
+### Installation
 
 ```bash
-# Clone and run
+# Clone
 git clone https://github.com/Kongesque/zonenet.git
 cd zonenet
+
+# Backend
+cd backend && uv sync && cd ..
+
+# Frontend
+cd frontend && npm install && cd ..
+```
+
+### Running
+
+**Development Mode:**
+
+```bash
+# Terminal 1 - Backend
+cd backend
+uv run uvicorn app.main:app --reload --port 8000
+
+# Terminal 2 - Frontend
+cd frontend
+npm run dev
+```
+
+Open **http://localhost:3000**
+
+**Docker:**
+
+```bash
 docker-compose up --build
 ```
 
-Open `http://127.0.0.1:5000` — that's it!
-
-<details>
-<summary><strong>🎮 GPU Acceleration (Optional)</strong></summary>
-
-For **NVIDIA GPU** users with [nvidia-container-toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html):
-
-1. Edit `docker-compose.yml` and uncomment the `zonenet-gpu` service
-2. Comment out the default `zonenet` service
-3. Run with: `docker-compose up --build`
-
-ZoneNet auto-detects GPU availability. Check the badge in the header (green = GPU, gray = CPU).
-
-*Apple Silicon users: GPU acceleration (MPS) works automatically with native install.*
-</details>
-
----
-
-## 📦 Installation (Manual)
-
-This project uses `uv` for lightning-fast Python dependency management and `npm` for styling.
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Kongesque/zonenet.git
-   cd zonenet
-   ```
-
-2. **Install `uv` (if not already installed):**
-   ```bash
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   ```
-   *For other installation methods (pip, etc.), refer to the [uv documentation](https://docs.astral.sh/uv/getting-started/installation/).*
-
-3. **Install Python dependencies:**
-   ```bash
-   uv sync
-   ```
-
-4. **Install CSS dependencies & build:**
-   ```bash
-   npm install
-   npm run build
-   ```
-
-5. **(Optional) Offline / Batch Model Setup:** 
-   If you plan to run ZoneNet in an offline environment or want to pre-download all model sizes (Nano to XLarge) at once:
-   ```bash
-   python download_models.py
-   ```
-
 ## 🎮 Usage
 
-1. **Start the application:**
-   ```bash
-   uv run app.py
-   ```
+1. **Upload** a video (MP4, WebM)
+2. **Draw zones** on the preview frame
+3. **Select target class** and confidence
+4. **Process** and view results
 
-2. **Open the Web UI:**
-   Navigate to `http://127.0.0.1:5000`.
+## 📡 API Endpoints
 
-3. **Workflow:**
-   - **Upload**: Drop a video file (MP4, WebM) on the main board.
-   - **Configure**:
-     - **Draw Logic**: Click to define the polygon points for your counting zone.
-     - **Target Object**: Select what you want to count (e.g., "Person", "Car", "Cow") from the sidebar.
-     - **Confidence**: Adjust the sensitivity slider (40% recommended).
-   - **Process**: Click "Process" to start the AI analysis.
-   - **Result**: Watch the processed video with real-time counting and download the result.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/jobs` | POST | Upload video |
+| `/api/jobs/{id}` | GET | Get job details |
+| `/api/jobs/{id}/process` | POST | Start processing |
+| `/api/jobs/{id}/export` | GET | Export CSV/JSON |
+| `/api/camera` | POST | Create live stream |
+| `/api/system-info` | GET | GPU/system info |
 
-## ⚙️ Advanced Configuration
+## 📄 License
 
-### Object Classes
-ZoneNet maps the standard **COCO 80 classes**. You can select these directly from the UI. 
+MIT License - see [LICENSE](LICENSE)
 
-### Model Selection
-- **YOLO11n (Nano)**: Fastest, use for real-time preview (Default).
-- **YOLO11s/m (Small/Medium)**: Balanced for general use.
-- **YOLO11l/x (Large/XLarge)**: Best accuracy for small or distant objects, slower processing. 
-*(Note: Larger models will be automatically downloaded on first use if not present locally.)* 
+## 🙏 Acknowledgments
 
-### Confidence Threshold
-- **Lower (~10-20%)**: Catches more objects but may include false positives (e.g., seeing a "car" in a shadow).
-- **Default (35%)**: The "sweet spot" balanced for general tracking.
-- **Higher (>60%)**: Only counts objects the model is extremely sure about.
-
-### ByteTrack Tracking Settings
-Fine-tune the tracking algorithm via the collapsible **Advanced Tracking Settings** panel:
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| **Detection Quality** | Higher = cleaner tracks, fewer false positives | 0.45 |
-| **Recovery Sensitivity** | Lower = better recovery of occluded objects | 0.10 |
-| **Match Threshold** | Lower = more lenient matching, fewer ID switches | 0.80 |
-| **Track Memory** | Frames to remember lost tracks (10-120) | 30 |
-
-*Tip: Increase Track Memory for videos with frequent occlusions or objects leaving/entering frame.*
+- [Ultralytics](https://ultralytics.com/) for YOLO11
+- [ByteTrack](https://github.com/ifzhang/ByteTrack) for object tracking

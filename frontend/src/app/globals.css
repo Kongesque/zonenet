@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+/* Geist Sans from Fontsource CDN */
+@font-face {
+  font-family: "Geist Sans";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-variable-wghtOnly-normal.woff2)
+    format("woff2");
+}
+
+@theme {
+  /* Core colors */
+  --color-text-color: #ededed;
+  --color-primary-color: #0a0a0a;
+
+  /* Gray scale */
+  --color-gray-300: #a1a1a1;
+  --color-gray-400: #666666;
+  --color-gray-500: #333333;
+
+  /* Button colors */
+  --color-btn-border: #343434;
+  --color-btn-hover: #1a1a1a;
+  --color-btn-bg: #121212;
+
+  /* Border colors */
+  --color-primary-border: #272727;
+
+  /* Background */
+  --color-bg-color: #000000;
+  --color-background: #000000;
+
+  /* Sidebar semantic tokens */
+  --color-sidebar-foreground: #ededed;
+  --color-sidebar-accent: #1a1a1a;
+  --color-sidebar-item-hover: #252525;
+  --color-sidebar-menu-hover: #454545;
+
+  /* Semantic colors */
+  --color-delete-text: #da3136;
+  --color-muted-foreground: #a1a1a1;
+  --color-secondary-text: #a0a0a0;
+
+  /* Dropzone specific tokens */
+  --color-dropzone-border: #1f1f1f;
+  --color-dropzone-accent: #1f6f65;
+  --color-dropzone-hover-bg: #121212;
+
+  /* Typography */
+  --font-family-sans: "Geist Sans", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+/* Light mode overrides */
+.light {
+  --color-text-color: #0a0a0a;
+  --color-primary-color: #ffffff;
+  --color-gray-300: #525252;
+  --color-gray-400: #737373;
+  --color-btn-border: #e5e5e5;
+  --color-gray-500: #a3a3a3;
+  --color-primary-border: #e5e5e5;
+  --color-btn-hover: #f5f5f5;
+  --color-btn-bg: #ffffff;
+  --color-bg-color: #fafafa;
+  --color-sidebar-foreground: #0a0a0a;
+  --color-sidebar-accent: #f5f5f5;
+  --color-sidebar-item-hover: #f5f5f5;
+  --color-sidebar-menu-hover: #e5e5e5;
+  --color-secondary-text: #525252;
+  --color-background: #ffffff;
+  --color-dropzone-border: #e5e5e5;
+  --color-dropzone-hover-bg: #f5f5f5;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font-family-sans);
+    background-color: var(--color-primary-color);
+    color: var(--color-text-color);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Thin scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-gray-500);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gray-400);
+  }
+
+  /* Firefox scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-gray-500) transparent;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-btn-bg text-text-color border border-btn-border rounded-md text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-btn-hover;
+  }
+
+  .btn-secondary {
+    @apply px-2 py-1 bg-btn-bg text-text-color border border-btn-border rounded-md text-sm font-medium transition-all duration-200 cursor-pointer hover:bg-btn-hover;
+  }
+
+  .loading-overlay {
+    @apply w-full h-full flex flex-col items-center justify-center text-center fixed inset-0 bg-bg-color z-50;
+  }
+
+  .card {
+    @apply bg-btn-hover border border-gray-500 rounded-xl;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
