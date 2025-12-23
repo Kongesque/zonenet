@@ -117,15 +117,15 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
     }
 
     return (
-        <div className="h-full w-full min-h-[150px]">
+        <div className="h-full w-full min-h-[150px] overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={chartData}
                     margin={{
-                        top: 10,
-                        right: 30,
+                        top: 5,
+                        right: 0,
                         left: 0,
-                        bottom: 0,
+                        bottom: 5,
                     }}
                 >
                     <defs>
@@ -143,19 +143,27 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
+                        tick={{ dy: 5 }}
                     />
                     <YAxis
                         stroke="#666"
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
+                        mirror={true}
                     />
                     <Tooltip
                         contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
                         itemStyle={{ color: '#fff' }}
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
                     />
-                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Legend
+                        iconType="circle"
+                        verticalAlign="top"
+                        align="right"
+                        wrapperStyle={{ fontSize: '10px', paddingBottom: '10px', top: 0, right: 0 }}
+                        formatter={(value) => <span style={{ marginRight: '10px' }}>{value}</span>}
+                    />
                     {zones.map((zone) => (
                         <Area
                             key={zone.id}

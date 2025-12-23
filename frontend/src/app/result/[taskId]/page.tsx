@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
@@ -11,8 +12,10 @@ import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 
 export default function ResultPage() {
     const params = useParams();
+
     const router = useRouter();
     const taskId = params.taskId as string;
+    const [activeTab, setActiveTab] = useState<"actions" | "details">("actions");
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
@@ -115,14 +118,7 @@ export default function ResultPage() {
                             muted
                         />
                         {/* Floating Overlay for FPS/Res */}
-                        <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="px-2 py-1 bg-black/50 backdrop-blur rounded text-xs text-white/80">
-                                {job.frameWidth}x{job.frameHeight}
-                            </div>
-                            <div className="px-2 py-1 bg-black/50 backdrop-blur rounded text-xs text-white/80">
-                                {job.processTime?.toFixed(1)}s
-                            </div>
-                        </div>
+
                     </div>
                 </BentoCard>
 
@@ -190,7 +186,7 @@ export default function ResultPage() {
                 </BentoCard>
 
                 {/* Activity Timeline - Spans 8 cols, 4 rows (Bottom Left) */}
-                <BentoCard className="col-span-8 row-span-4" title="Activity Timeline">
+                <BentoCard className="col-span-8 row-span-4" noScroll>
                     <div className="h-full w-full p-4">
                         <ActivityTimeline
                             data={job.detectionData}
@@ -201,59 +197,89 @@ export default function ResultPage() {
                 </BentoCard>
 
                 {/* Control Panel / Actions - Spans 4 cols, 4 rows (Bottom Right) */}
-                <BentoCard className="col-span-4 row-span-4" title="Actions">
-                    <div className="flex flex-col gap-3 h-full justify-center p-4">
-                        <div className="grid grid-cols-2 gap-2 text-center mb-2">
-                            <div className="bg-white/5 rounded-lg p-2">
-                                <p className="text-[10px] text-white/50 uppercase tracking-widest">Model</p>
-                                <p className="text-sm font-semibold">{job.model?.replace(".pt", "")}</p>
-                            </div>
-                            <div className="bg-white/5 rounded-lg p-2">
-                                <p className="text-[10px] text-white/50 uppercase tracking-widest">Confidence</p>
-                                <p className="text-sm font-semibold">{job.confidence}%</p>
-                            </div>
+                <BentoCard className="col-span-4 row-span-4" noScroll>
+                    <div className="flex flex-col h-full p-4 overflow-hidden">
+                        {/* Tab Switcher */}
+                        <div className="flex p-1 bg-white/5 rounded-lg mb-4 shrink-0">
+                            <button
+                                onClick={() => setActiveTab("actions")}
+                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "actions"
+                                    ? "bg-blue-500/20 text-blue-400 shadow-sm"
+                                    : "text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                Actions
+                            </button>
+                            <button
+                                onClick={() => setActiveTab("details")}
+                                className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${activeTab === "details"
+                                    ? "bg-blue-500/20 text-blue-400 shadow-sm"
+                                    : "text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                Details
+                            </button>
                         </div>
 
-                        <div className="flex gap-2">
-                            <a
-                                href={api.getExportCsvUrl(taskId)}
-                                className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
-                                download
-                            >
-                                <Table className="w-3 h-3" /> CSV
-                            </a>
-                            <a
-                                href={api.getExportJsonUrl(taskId)}
-                                className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
-                                download
-                            >
-                                <FileJson className="w-3 h-3" /> JSON
-                            </a>
+                        <div className="flex-1 min-h-0">
+                            {activeTab === "actions" ? (
+                                <div className="flex flex-col gap-3 h-full justify-between">
+                                    <button
+                                        onClick={() => router.push(`/zone/${taskId}`)}
+                                        className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-sm font-medium transition-all shrink-0"
+                                    >
+                                        Edit Zones
+                                    </button>
+
+                                    <div className="flex gap-2 shrink-0">
+                                        <a
+                                            href={api.getExportCsvUrl(taskId)}
+                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
+                                            download
+                                        >
+                                            <Table className="w-3 h-3" /> CSV
+                                        </a>
+                                        <a
+                                            href={api.getExportJsonUrl(taskId)}
+                                            className="flex-1 flex items-center justify-center gap-1 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium transition-all"
+                                            download
+                                        >
+                                            <FileJson className="w-3 h-3" /> JSON
+                                        </a>
+                                    </div>
+
+                                    <a
+                                        href={videoUrl}
+                                        download={`zonenet_output_${taskId}.mp4`}
+                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-white text-black hover:bg-gray-200 text-sm font-bold transition-all shrink-0 mt-auto"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                        Download Video
+                                    </a>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3 h-full content-start overflow-y-auto pr-1">
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Model</p>
+                                        <p className="text-sm font-semibold truncate" title={job.model}>
+                                            {job.model?.replace(".pt", "") || "N/A"}
+                                        </p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Confidence</p>
+                                        <p className="text-sm font-semibold">{job.confidence}%</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Dimensions</p>
+                                        <p className="text-sm font-semibold">{job.frameWidth} x {job.frameHeight}</p>
+                                    </div>
+                                    <div className="bg-white/5 rounded-lg p-3">
+                                        <p className="text-[10px] text-white/50 uppercase tracking-widest mb-1">Processed</p>
+                                        <p className="text-sm font-semibold">{job.processTime?.toFixed(1)}s</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-
-                        <div className="h-px bg-white/10 my-1" />
-
-                        <button
-                            onClick={() => router.push(`/zone/${taskId}`)}
-                            className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-sm font-medium transition-all"
-                        >
-                            Edit Zones
-                        </button>
-                        <a
-                            href={videoUrl}
-                            download={`zonenet_output_${taskId}.mp4`}
-                            className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-white text-black hover:bg-gray-200 text-sm font-bold transition-all"
-                        >
-                            <Download className="w-4 h-4" />
-                            Download
-                        </a>
-
-                        <Link
-                            href="/"
-                            className="text-xs text-center text-white/30 hover:text-white/60 mt-auto"
-                        >
-                            Back to Home
-                        </Link>
                     </div>
                 </BentoCard>
             </BentoGrid>
