@@ -78,9 +78,6 @@ export default function ResultPage() {
     }
 
     const videoUrl = api.getOutputVideoUrl(taskId);
-    const totalCount = job.detectionData?.length
-        ? job.detectionData[job.detectionData.length - 1]?.count || 0
-        : 0;
 
     // Calculate zone statistics
     const zoneStats: Record<string, { total: number; peak: number }> = {};

@@ -35,10 +35,8 @@ def handle_upload_file(file, upload_folder):
     first_frame = extract_frame(filepath, 0)
     if first_frame is not None:
          cv2.imwrite(frame_path, first_frame)
-         frame = cv2.imread(frame_path)
-         if frame is not None:
-            frame_size = frame.shape[1], frame.shape[0]  # width, height
-            update_job(taskID, frame_path=frame_path, frame_width=frame_size[0], frame_height=frame_size[1])
+         frame_size = first_frame.shape[1], first_frame.shape[0]  # width, height
+         update_job(taskID, frame_path=frame_path, frame_width=frame_size[0], frame_height=frame_size[1])
     
     return taskID
 

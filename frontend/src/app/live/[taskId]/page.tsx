@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Square, Download } from "lucide-react";
+import { Square } from "lucide-react";
 
 export default function LivePage() {
     const params = useParams();
@@ -120,10 +120,10 @@ export default function LivePage() {
                     {/* Status Indicator */}
                     <div
                         className={`w-3 h-3 rounded-full ${connectionStatus === "live"
-                                ? "bg-green-500 animate-pulse"
-                                : connectionStatus === "connecting"
-                                    ? "bg-yellow-500 animate-pulse"
-                                    : "bg-gray-500"
+                            ? "bg-green-500 animate-pulse"
+                            : connectionStatus === "connecting"
+                                ? "bg-yellow-500 animate-pulse"
+                                : "bg-gray-500"
                             }`}
                     />
                     <h1 className="text-xl font-semibold text-text-color">
@@ -142,8 +142,8 @@ export default function LivePage() {
                     onClick={handleStop}
                     disabled={!isRunning}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${isRunning
-                            ? "bg-delete-text text-white hover:bg-delete-text/80"
-                            : "bg-gray-500 text-gray-300 cursor-not-allowed"
+                        ? "bg-delete-text text-white hover:bg-delete-text/80"
+                        : "bg-gray-500 text-gray-300 cursor-not-allowed"
                         }`}
                 >
                     <Square className="w-4 h-4" />

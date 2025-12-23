@@ -5,13 +5,13 @@ Unlike the file-based detector, this yields frames continuously without saving t
 
 import cv2
 import os
-from collections import defaultdict
 import tempfile
 import time
-
-from ultralytics import YOLO
+import shutil
 import colorsys
 import numpy as np
+from collections import defaultdict
+from ultralytics import YOLO
 
 
 def get_color_from_class_id(class_id):
@@ -183,7 +183,6 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
         print(f"Model {model_name} not found in weights/. Attempting auto-download...")
         try:
             temp_model = YOLO(model_name)
-            import shutil
             if os.path.exists(model_name):
                 os.makedirs("weights", exist_ok=True)
                 shutil.move(model_name, model_path)

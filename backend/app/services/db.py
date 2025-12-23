@@ -112,10 +112,6 @@ def get_job(task_id):
         if 'target_class' not in job_dict or job_dict['target_class'] is None:
             job_dict['target_class'] = 19
             
-        # Ensure confidence is present (for old records)
-        if 'confidence' not in job_dict or job_dict['confidence'] is None:
-            job_dict['confidence'] = 25
-             
         if 'confidence' not in job_dict or job_dict['confidence'] is None:
             job_dict['confidence'] = 35
 

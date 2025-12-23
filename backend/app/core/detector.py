@@ -1,12 +1,12 @@
 import cv2
 import os
-from collections import defaultdict
-
-from ultralytics import YOLO
-
+import tempfile
+import shutil
 import colorsys
 import time
 import numpy as np
+from collections import defaultdict
+from ultralytics import YOLO
 
 from app.services.gpu_utils import get_device, get_gpu_info
 
@@ -94,8 +94,6 @@ def detection(path_x, zones, frame_size, taskID, conf=40, model_name='yolo11n.pt
             'track_buffer': 30
         }
     
-    import tempfile
-    
     # Generate custom ByteTrack YAML using a temporary file
     tracker_yaml_file = tempfile.NamedTemporaryFile(mode='w', suffix='.yaml', delete=False)
     tracker_yaml_path = tracker_yaml_file.name
@@ -156,8 +154,6 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
             # Download to current directory (default YOLO behavior)
             temp_model = YOLO(model_name) 
             
-            # Move to weights folder
-            import shutil
             # YOLO downloads to current directory
             if os.path.exists(model_name):
                 os.makedirs("weights", exist_ok=True)
@@ -435,7 +431,6 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
         
     cap.release()
     out.release()
-    cv2.destroyAllWindows()
     end_time = time.time()
     process_time = end_time - start_time
     print("Processing time:", process_time, "seconds")

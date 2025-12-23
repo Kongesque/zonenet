@@ -11,7 +11,7 @@ interface HeaderProps {
 }
 
 export function Header({ children }: HeaderProps) {
-    const { theme, setTheme, resolvedTheme } = useTheme();
+    const { setTheme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
     const [gpuInfo, setGpuInfo] = useState<{
         available: boolean;
@@ -73,8 +73,8 @@ export function Header({ children }: HeaderProps) {
                 {gpuInfo && (
                     <div
                         className={`px-2 py-0.5 text-xs font-medium rounded-full cursor-default ${gpuInfo.available
-                                ? "bg-green-500/20 text-green-400"
-                                : "bg-gray-500/20 text-gray-400"
+                            ? "bg-green-500/20 text-green-400"
+                            : "bg-gray-500/20 text-gray-400"
                             }`}
                         title={gpuInfo.name || "Compute Device"}
                     >

@@ -33,7 +33,7 @@ export default function CameraPage() {
             if (!result.success) {
                 setError(result.error || "Connection failed");
             }
-        } catch (err) {
+        } catch {
             setError("Failed to test connection");
         } finally {
             setIsConnecting(false);
@@ -83,8 +83,8 @@ export default function CameraPage() {
                             setTestResult(null);
                         }}
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${sourceType === "rtsp"
-                                ? "bg-btn-hover border-text-color text-text-color border"
-                                : "bg-btn-bg border-btn-border text-secondary-text border"
+                            ? "bg-btn-hover border-text-color text-text-color border"
+                            : "bg-btn-bg border-btn-border text-secondary-text border"
                             }`}
                     >
                         <Wifi className="w-4 h-4 inline mr-2" />
@@ -97,8 +97,8 @@ export default function CameraPage() {
                             setTestResult(null);
                         }}
                         className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${sourceType === "webcam"
-                                ? "bg-btn-hover border-text-color text-text-color border"
-                                : "bg-btn-bg border-btn-border text-secondary-text border"
+                            ? "bg-btn-hover border-text-color text-text-color border"
+                            : "bg-btn-bg border-btn-border text-secondary-text border"
                             }`}
                     >
                         <Video className="w-4 h-4 inline mr-2" />
