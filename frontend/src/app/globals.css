@@ -6,73 +6,87 @@
   font-style: normal;
   font-display: swap;
   font-weight: 100 900;
-  src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-variable-wghtOnly-normal.woff2)
-    format("woff2");
+  src: url(https://cdn.jsdelivr.net/fontsource/fonts/geist-sans@latest/latin-variable-wghtOnly-normal.woff2) format("woff2");
 }
 
 @theme {
-  /* Core colors */
-  --color-text-color: #ededed;
-  --color-primary-color: #0a0a0a;
+  /* Colors */
+  --color-bg-1: #000000;
+  --color-bg-2: #0a0a0a;
 
-  /* Gray scale */
-  --color-gray-300: #a1a1a1;
-  --color-gray-400: #666666;
-  --color-gray-500: #333333;
+  --color-gray-1: #111111;
+  --color-gray-2: #1a1a1a;
+  --color-gray-3: #232323;
+  --color-gray-4: #2e2e2e;
+  --color-gray-5: #3d3d3d;
+  --color-gray-6: #4a4a4a;
+  --color-gray-7: #6b6b6b;
+  --color-gray-8: #7d7d7d;
+  --color-gray-9: #a1a1a1;
+  --color-gray-10: #ededed;
 
-  /* Button colors */
-  --color-btn-border: #343434;
-  --color-btn-hover: #1a1a1a;
-  --color-btn-bg: #121212;
+  --color-success: #45d483;
+  --color-error: #f87171;
+  --color-warning: #fbbf24;
+  --color-info: #60a5fa;
+  --color-accent: #2dd4bf;
 
-  /* Border colors */
-  --color-primary-border: #272727;
+  /* Aliases */
+  --color-text-color: var(--color-gray-10);
+  --color-primary-color: var(--color-bg-2);
+  --color-secondary-text: var(--color-gray-9);
+  --color-muted-foreground: var(--color-gray-9);
 
-  /* Background */
-  --color-bg-color: #000000;
-  --color-background: #000000;
+  --color-btn-border: var(--color-gray-5);
+  --color-btn-hover: var(--color-gray-2);
+  --color-btn-bg: var(--color-gray-1);
 
-  /* Sidebar semantic tokens */
-  --color-sidebar-foreground: #ededed;
-  --color-sidebar-accent: #1a1a1a;
-  --color-sidebar-item-hover: #252525;
-  --color-sidebar-menu-hover: #454545;
+  --color-primary-border: var(--color-gray-4);
 
-  /* Semantic colors */
-  --color-delete-text: #da3136;
-  --color-muted-foreground: #a1a1a1;
-  --color-secondary-text: #a0a0a0;
+  --color-bg-color: var(--color-bg-1);
+  --color-background: var(--color-bg-1);
 
-  /* Dropzone specific tokens */
-  --color-dropzone-border: #1f1f1f;
-  --color-dropzone-accent: #1f6f65;
-  --color-dropzone-hover-bg: #121212;
+  --color-sidebar-foreground: var(--color-gray-10);
+  --color-sidebar-accent: var(--color-gray-2);
+  --color-sidebar-item-hover: var(--color-gray-3);
+  --color-sidebar-menu-hover: var(--color-gray-6);
 
-  /* Typography */
+  --color-delete-text: var(--color-error);
+
+  --color-dropzone-border: var(--color-gray-4);
+  --color-dropzone-accent: var(--color-accent);
+  --color-dropzone-hover-bg: var(--color-gray-1);
+
+  /* Fonts */
   --font-family-sans: "Geist Sans", -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
+
+  --color-gray-300: var(--color-gray-9);
+  --color-gray-400: var(--color-gray-7);
+  --color-gray-500: var(--color-gray-5);
 }
 
-/* Light mode overrides */
 .light {
-  --color-text-color: #0a0a0a;
-  --color-primary-color: #ffffff;
-  --color-gray-300: #525252;
-  --color-gray-400: #737373;
-  --color-btn-border: #e5e5e5;
-  --color-gray-500: #a3a3a3;
-  --color-primary-border: #e5e5e5;
-  --color-btn-hover: #f5f5f5;
-  --color-btn-bg: #ffffff;
-  --color-bg-color: #fafafa;
-  --color-sidebar-foreground: #0a0a0a;
-  --color-sidebar-accent: #f5f5f5;
-  --color-sidebar-item-hover: #f5f5f5;
-  --color-sidebar-menu-hover: #e5e5e5;
-  --color-secondary-text: #525252;
-  --color-background: #ffffff;
-  --color-dropzone-border: #e5e5e5;
-  --color-dropzone-hover-bg: #f5f5f5;
+  /* Light Mode */
+  --color-bg-1: #ffffff;
+  --color-bg-2: #fafafa;
+
+  --color-gray-1: #f5f5f5;
+  --color-gray-2: #ebebeb;
+  --color-gray-3: #e0e0e0;
+  --color-gray-4: #d4d4d4;
+  --color-gray-5: #c7c7c7;
+  --color-gray-6: #a3a3a3;
+  --color-gray-7: #737373;
+  --color-gray-8: #525252;
+  --color-gray-9: #525252;
+  --color-gray-10: #0a0a0a;
+
+  --color-success: #16a34a;
+  --color-error: #dc2626;
+  --color-warning: #d97706;
+  --color-info: #2563eb;
+  --color-accent: #0d9488;
 }
 
 @layer base {
@@ -139,6 +153,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -146,10 +161,12 @@
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.5;
   }
