@@ -184,7 +184,16 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
     
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
     out = cv2.VideoWriter(DESTIN_VIDEO, fourcc, newFPS, (width, height))
-
+    
+    if not out.isOpened():
+        print("Failed to open video writer with avc1, falling back to mp4v")
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        out = cv2.VideoWriter(DESTIN_VIDEO, fourcc, newFPS, (width, height))
+        
+    if not out.isOpened():
+        print("Failed to open video writer with mp4v")
+        # Handle failure appropriately, maybe raise exception or continue without video
+    
     start_time = time.time()
 
     # Preprocess zones
