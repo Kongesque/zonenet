@@ -209,21 +209,84 @@ export default function ResultPage() {
                                         <span className="text-xs font-medium text-text-color/90">Video Info</span>
                                     </div>
                                     <div className="space-y-2 text-xs">
+                                        {/* Video Properties */}
                                         <div className="flex justify-between">
                                             <span className="text-secondary-text">Resolution</span>
-                                            <span className="font-mono text-text-color">{job.frameWidth} x {job.frameHeight}</span>
+                                            <span className="font-mono text-text-color">{job.frameWidth} × {job.frameHeight}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-secondary-text">Duration</span>
-                                            <span className="font-mono text-text-color">{job.processTime?.toFixed(1)}s</span>
+                                            <span className="text-secondary-text">Process Time</span>
+                                            <span className="font-mono text-text-color">
+                                                {job.processTime && job.processTime >= 60
+                                                    ? `${Math.floor(job.processTime / 60)}m ${(job.processTime % 60).toFixed(0)}s`
+                                                    : `${job.processTime?.toFixed(1)}s`}
+                                            </span>
                                         </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-secondary-text">Source</span>
+                                            <span className={`font-medium ${job.sourceType === 'rtsp' ? 'text-purple-400' :
+                                                job.sourceType === 'webcam' ? 'text-green-400' :
+                                                    'text-text-color'
+                                                }`}>
+                                                {job.sourceType === 'rtsp' ? 'RTSP Stream' :
+                                                    job.sourceType === 'webcam' ? 'Webcam' :
+                                                        'Video File'}
+                                            </span>
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="border-t border-white/5 my-1" />
+
+                                        {/* Model Configuration */}
                                         <div className="flex justify-between">
                                             <span className="text-secondary-text">Model</span>
-                                            <span className="text-blue-400">{job.model || "YOLOv8"}</span>
+                                            <span className="text-blue-400">{job.model?.replace('.pt', '') || "YOLOv8"}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-secondary-text">Confidence</span>
                                             <span className="font-mono text-text-color">{(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%</span>
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="border-t border-white/5 my-1" />
+
+                                        {/* Detection Stats */}
+                                        <div className="flex justify-between">
+                                            <span className="text-secondary-text">Zones</span>
+                                            <span className="font-mono text-text-color">{job.zones?.length || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-secondary-text">Peak Occupancy</span>
+                                            <span className="font-mono text-amber-400">
+                                                {Math.max(...Object.values(zoneStats).map(s => s.peak), 0)}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-secondary-text">Avg Dwell</span>
+                                            <span className="font-mono text-text-color">
+                                                {(() => {
+                                                    const allDwell = job.dwellData || [];
+                                                    if (allDwell.length === 0) return "—";
+                                                    const avgDwell = allDwell.reduce((acc, d) => acc + d.duration, 0) / allDwell.length;
+                                                    return `${avgDwell.toFixed(1)}s`;
+                                                })()}
+                                            </span>
+                                        </div>
+
+                                        {/* Divider */}
+                                        <div className="border-t border-white/5 my-1" />
+
+                                        {/* Timestamp */}
+                                        <div className="flex justify-between">
+                                            <span className="text-secondary-text">Processed</span>
+                                            <span className="text-secondary-text/80 text-[10px]">
+                                                {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', {
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                }) : '—'}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
