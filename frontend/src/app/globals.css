@@ -57,6 +57,9 @@
   --color-dropzone-accent: var(--color-accent);
   --color-dropzone-hover-bg: var(--color-gray-1);
 
+  --color-card-bg: rgba(255, 255, 255, 0.05);
+  --color-card-bg-hover: rgba(255, 255, 255, 0.1);
+
   /* Fonts */
   --font-family-sans: "Geist Sans", -apple-system, BlinkMacSystemFont,
     "Segoe UI", sans-serif;
@@ -87,6 +90,9 @@
   --color-warning: #d97706;
   --color-info: #2563eb;
   --color-accent: #0d9488;
+
+  --color-card-bg: rgba(0, 0, 0, 0.05);
+  --color-card-bg-hover: rgba(0, 0, 0, 0.1);
 }
 
 @layer base {

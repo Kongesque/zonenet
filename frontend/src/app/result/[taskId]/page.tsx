@@ -102,8 +102,8 @@ export default function ResultPage() {
     });
 
     return (
-        <main className="h-full w-full overflow-auto bg-background text-text-color p-4">
-            <div className="flex flex-col gap-4 min-h-full">
+        <main className="h-full w-full overflow-hidden bg-background text-text-color p-4">
+            <div className="flex flex-col gap-4 h-full">
                 {/* Row 1: Video + Analytics */}
                 <div className="grid grid-cols-12 gap-4">
                     {/* Main Video Tile - Spans 8 cols, aspect-video forces 16:9 height */}
@@ -148,7 +148,7 @@ export default function ResultPage() {
                                     onClick={() => setIsHeatmapEnabled(!isHeatmapEnabled)}
                                     className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${isHeatmapEnabled
                                         ? "bg-orange-500/20 text-orange-500 border border-orange-500/30"
-                                        : "bg-white/5 text-secondary-text border border-white/10 hover:bg-white/10"
+                                        : "bg-card-bg text-secondary-text border border-white/10 hover:bg-card-bg-hover"
                                         }`}
                                     title="Toggle Heatmap Overlay"
                                 >
@@ -157,9 +157,9 @@ export default function ResultPage() {
                                 </button>
                             }
                         >
-                            <div className="space-y-2 px-4 pb-4 pt-1">
+                            <div className="space-y-2 px-2 pb-4 pt-1">
                                 {/* Activity Card */}
-                                <div className="bg-white/5 hover:bg-white/10 rounded-md p-3 transition-colors">
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Activity className="w-3.5 h-3.5 text-blue-400" />
                                         <span className="text-xs font-medium text-text-color/90">Activity Timeline</span>
@@ -174,7 +174,7 @@ export default function ResultPage() {
                                 </div>
 
                                 {/* Peak Analysis Card */}
-                                <div className="bg-white/5 hover:bg-white/10 rounded-md p-3 transition-colors">
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
                                     <div className="flex items-center gap-2 mb-2">
                                         <BarChart3 className="w-3.5 h-3.5 text-red-400" />
                                         <span className="text-xs font-medium text-text-color/90">Peak Analysis</span>
@@ -189,7 +189,7 @@ export default function ResultPage() {
                                 </div>
 
                                 {/* Dwell Time Card */}
-                                <div className="bg-white/5 hover:bg-white/10 rounded-md p-3 transition-colors">
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Clock className="w-3.5 h-3.5 text-amber-400" />
                                         <span className="text-xs font-medium text-text-color/90">Dwell Time</span>
@@ -203,7 +203,7 @@ export default function ResultPage() {
                                 </div>
 
                                 {/* Video Info Card */}
-                                <div className="bg-white/5 rounded-md p-3">
+                                <div className="bg-card-bg rounded-md p-3">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Info className="w-3.5 h-3.5 text-blue-400" />
                                         <span className="text-xs font-medium text-text-color/90">Video Info</span>
@@ -233,13 +233,12 @@ export default function ResultPage() {
                 </div>
 
                 {/* Row 2: Zone Analysis + Actions */}
-                <div className="grid grid-cols-12 gap-4">
+                <div className="flex-1 grid grid-cols-12 gap-4 min-h-0">
                     {/* Zone Analysis - Bottom Left (8 cols) */}
                     <BentoCard
-                        className="col-span-8"
-                        title="Zone Analysis"
+                        className="col-span-8 min-h-0"
                     >
-                        <div className="grid grid-cols-3 gap-3 px-4 pb-4 pt-1">
+                        <div className="grid grid-cols-3 gap-3 px-2 py-2 h-full">
                             {job.zones?.map((zone) => {
                                 const stats = zoneStats[zone.id] || { total: 0, peak: 0 };
                                 const isLine = zone.points?.length === 2;
@@ -252,7 +251,7 @@ export default function ResultPage() {
                                 return (
                                     <div
                                         key={zone.id}
-                                        className="bg-white/5 hover:bg-white/10 rounded-md p-3 transition-colors group"
+                                        className="bg-card-bg hover:bg-card-bg-hover rounded-md p-2 transition-colors group"
                                     >
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
@@ -312,7 +311,7 @@ export default function ResultPage() {
 
                     {/* Control Panel / Actions - Spans 4 cols, fills remaining height */}
                     <BentoCard className="col-span-4" noScroll>
-                        <div className="flex flex-col h-full px-5 justify-center gap-3 text-text-color">
+                        <div className="flex flex-col h-full px-2 justify-center gap-3 text-text-color">
 
                             {/* Primary Action */}
                             <a

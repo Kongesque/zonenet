@@ -48,7 +48,7 @@ export function BentoCard({
                 but we usually want the header to be visual. z-30 to stay on top of scrollable content. */
             }
             {(title || icon || headerAction) && (
-                <div className={`absolute top-0 left-0 w-full px-4 py-3 z-30 flex items-center gap-2 bg-gradient-to-b to-transparent pointer-events-none ${darkHeader ? 'from-black/60' : 'from-bg-color/90'}`}>
+                <div className={`absolute top-0 left-0 w-full px-2 py-2 z-30 flex items-center gap-2 bg-gradient-to-b to-transparent pointer-events-none ${darkHeader ? 'from-black/60' : 'from-bg-color/90'}`}>
                     {icon && <span className={`${darkHeader ? 'text-white/70' : 'text-text-color/70'}`}>{icon}</span>}
                     {title && <h3 className={`font-semibold text-xs tracking-wider uppercase ${darkHeader ? 'text-white/90' : 'text-text-color/90'}`}>{title}</h3>}
 
