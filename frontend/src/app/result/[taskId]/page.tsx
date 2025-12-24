@@ -165,154 +165,13 @@ export default function ResultPage() {
                             }
                         >
                             <div className="space-y-2 px-2 pb-4 pt-1">
-                                {/* Activity Card */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Activity className="w-3.5 h-3.5 text-blue-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Activity Timeline</span>
-                                    </div>
-                                    <div className="h-[100px] overflow-hidden">
-                                        <ActivityTimeline
-                                            data={job.detectionData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Peak Analysis Card */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <BarChart3 className="w-3.5 h-3.5 text-red-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Peak Analysis</span>
-                                    </div>
-                                    <div className="h-[100px] overflow-hidden">
-                                        <PeakTimeChart
-                                            data={job.detectionData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Dwell Time Card */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Clock className="w-3.5 h-3.5 text-amber-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Dwell Time</span>
-                                    </div>
-                                    <div className="h-[100px] overflow-hidden">
-                                        <DwellTimeChart
-                                            data={job.dwellData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Cumulative Flow Chart */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <TrendingUp className="w-3.5 h-3.5 text-green-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Net Flow Over Time</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <CumulativeFlowChart
-                                            detectionData={job.detectionData}
-                                            lineCrossingData={job.lineCrossingData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Zone Comparison */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Zone Overview</span>
-                                    </div>
-                                    <div className="h-[150px] overflow-hidden">
-                                        <ZoneComparisonChart
-                                            detectionData={job.detectionData}
-                                            dwellData={job.dwellData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Occupancy Stacked */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Zone Loads</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <OccupancyStackedChart
-                                            data={job.detectionData}
-                                            zones={job.zones}
-                                            duration={job.processTime}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Dwell Distribution */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Timer className="w-3.5 h-3.5 text-amber-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Dwell Segments</span>
-                                    </div>
-                                    <div className="h-[120px] overflow-hidden">
-                                        <DwellDistributionChart data={job.dwellData} />
-                                    </div>
-                                </div>
-
-                                {/* Traffic Flow */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <ArrowLeftRight className="w-3.5 h-3.5 text-purple-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Entry / Exit</span>
-                                    </div>
-                                    <div className="h-[150px] overflow-hidden">
-                                        <TrafficFlowChart
-                                            lineCrossingData={job.lineCrossingData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Bounce Rate */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <MousePointerClick className="w-3.5 h-3.5 text-red-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Bounce Rate (&lt;5s)</span>
-                                    </div>
-                                    <div className="h-[200px] overflow-hidden">
-                                        <BounceRateChart
-                                            dwellData={job.dwellData}
-                                            zones={job.zones}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Class Breakdown */}
-                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <PieChart className="w-3.5 h-3.5 text-pink-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Class Distribution</span>
-                                    </div>
-                                    <div className="h-[180px] overflow-hidden">
-                                        <ClassBreakdownChart zones={job.zones} />
-                                    </div>
-                                </div>
-
-                                {/* Video Info Card */}
+                                {/* Video Info Card (Context first) */}
                                 <div className="bg-card-bg rounded-md p-3">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Info className="w-3.5 h-3.5 text-blue-400" />
                                         <span className="text-xs font-medium text-text-color/90">Video Info</span>
                                     </div>
                                     <div className="space-y-2 text-xs">
-
                                         {/* Video Properties */}
                                         <div className="flex justify-between">
                                             <span className="text-secondary-text">Resolution</span>
@@ -402,6 +261,119 @@ export default function ResultPage() {
                                                 }) : '—'}
                                             </span>
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Activity Card */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Activity className="w-3.5 h-3.5 text-blue-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Activity Timeline</span>
+                                    </div>
+                                    <div className="h-[100px] overflow-hidden">
+                                        <ActivityTimeline
+                                            data={job.detectionData}
+                                            zones={job.zones}
+                                            duration={job.processTime}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Zone Comparison */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <BarChart3 className="w-3.5 h-3.5 text-blue-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Zone Overview</span>
+                                    </div>
+                                    <div className="h-[150px] overflow-hidden">
+                                        <ZoneComparisonChart
+                                            detectionData={job.detectionData}
+                                            dwellData={job.dwellData}
+                                            zones={job.zones}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Cumulative Flow Chart */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <TrendingUp className="w-3.5 h-3.5 text-green-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Net Flow Over Time</span>
+                                    </div>
+                                    <div className="h-[120px] overflow-hidden">
+                                        <CumulativeFlowChart
+                                            detectionData={job.detectionData}
+                                            lineCrossingData={job.lineCrossingData}
+                                            zones={job.zones}
+                                            duration={job.processTime}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Traffic Flow */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ArrowLeftRight className="w-3.5 h-3.5 text-purple-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Entry / Exit</span>
+                                    </div>
+                                    <div className="h-[150px] overflow-hidden">
+                                        <TrafficFlowChart
+                                            lineCrossingData={job.lineCrossingData}
+                                            zones={job.zones}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Occupancy Stacked */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Zone Loads</span>
+                                    </div>
+                                    <div className="h-[120px] overflow-hidden">
+                                        <OccupancyStackedChart
+                                            data={job.detectionData}
+                                            zones={job.zones}
+                                            duration={job.processTime}
+                                        />
+                                    </div>
+                                </div>
+
+
+
+                                {/* Dwell Distribution */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Timer className="w-3.5 h-3.5 text-amber-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Dwell Segments</span>
+                                    </div>
+                                    <div className="h-[120px] overflow-hidden">
+                                        <DwellDistributionChart data={job.dwellData} />
+                                    </div>
+                                </div>
+
+                                {/* Bounce Rate */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MousePointerClick className="w-3.5 h-3.5 text-red-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Bounce Rate</span>
+                                    </div>
+                                    <div className="h-[200px] overflow-hidden">
+                                        <BounceRateChart
+                                            dwellData={job.dwellData}
+                                            zones={job.zones}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Class Breakdown */}
+                                <div className="bg-card-bg hover:bg-card-bg-hover rounded-md p-3 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <PieChart className="w-3.5 h-3.5 text-pink-400" />
+                                        <span className="text-xs font-medium text-text-color/90">Class Distribution</span>
+                                    </div>
+                                    <div className="h-[180px] overflow-hidden">
+                                        <ClassBreakdownChart zones={job.zones} />
                                     </div>
                                 </div>
                             </div>

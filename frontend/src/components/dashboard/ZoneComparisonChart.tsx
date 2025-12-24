@@ -97,8 +97,10 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                         itemStyle={{ color: '#fff' }}
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
                         formatter={((value: number | undefined, name: string | undefined) => {
-                            const unit = name === 'avgDwell' ? 's' : '';
-                            return [`${value ?? 0}${unit}`, name === 'visitors' ? 'Total Visitors' : name === 'peak' ? 'Peak Count' : 'Avg Dwell'];
+                            if (name === 'Dwell (s)') return [`${value ?? 0}s`, 'Avg Dwell'];
+                            if (name === 'Visitors') return [`${value ?? 0}`, 'Total Visitors'];
+                            if (name === 'Peak') return [`${value ?? 0}`, 'Peak Count'];
+                            return [value, name];
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                     />
@@ -108,9 +110,9 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                         align="right"
                         wrapperStyle={{ fontSize: '10px', paddingBottom: '8px', top: 0, right: 0 }}
                     />
-                    <Bar dataKey="visitors" name="Visitors" fill="#60a5fa" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="peak" name="Peak" fill="#f97316" radius={[4, 4, 0, 0]} barSize={16} />
-                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#a78bfa" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} />
+                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} />
                 </BarChart>
             </ResponsiveContainer>
         </div>

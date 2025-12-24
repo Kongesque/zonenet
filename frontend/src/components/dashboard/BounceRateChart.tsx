@@ -99,10 +99,10 @@ export default function BounceRateChart({ dwellData, zones, bounceThreshold = 5 
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
                         formatter={((value: number | undefined, name: string | undefined, props: { payload: { bounces: number; engaged: number; total: number; fullName: string } }) => {
                             const p = props.payload;
-                            if (name === 'bounceRate') {
+                            if (name === 'Bounce') {
                                 return [`${value}% (${p.bounces}/${p.total} visitors)`, 'Bounce Rate'];
                             }
-                            return [`${value}% (${p.engaged}/${p.total} visitors)`, 'Engaged'];
+                            return [`${value}% (${p.engaged}/${p.total} visitors)`, 'Engaged Rate'];
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
                     />

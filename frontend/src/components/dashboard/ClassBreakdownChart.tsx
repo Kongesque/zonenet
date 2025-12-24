@@ -11,24 +11,11 @@ import {
 } from "recharts";
 import { Zone } from "@/utils/types";
 import { COCO_CLASSES } from "@/utils/types";
+import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors"; // Use shared colors
 
 interface ClassBreakdownChartProps {
     zones: Zone[];
 }
-
-// Color palette for different classes
-const CLASS_COLORS: Record<number, string> = {
-    0: "#60a5fa",  // person - blue
-    1: "#22c55e",  // bicycle - green
-    2: "#f97316",  // car - orange
-    3: "#ef4444",  // motorcycle - red
-    5: "#a855f7",  // bus - purple
-    7: "#eab308",  // truck - yellow
-    16: "#ec4899", // dog - pink
-    17: "#14b8a6", // horse - teal
-};
-
-const DEFAULT_COLOR = "#6b7280";
 
 export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps) {
     const chartData = useMemo(() => {
