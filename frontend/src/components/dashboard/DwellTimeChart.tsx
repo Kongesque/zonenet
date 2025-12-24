@@ -9,7 +9,8 @@ import {
     CartesianGrid,
     Tooltip,
     ResponsiveContainer,
-    Cell
+    Cell,
+    Legend
 } from "recharts";
 import { DwellEvent, Zone } from "@/utils/types";
 
@@ -57,16 +58,16 @@ export default function DwellTimeChart({ data, zones }: DwellTimeChartProps) {
     }
 
     return (
-        <div className="h-full w-full min-h-[150px] overflow-hidden">
+        <div className="h-full w-full overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                     data={chartData}
                     layout="vertical"
                     margin={{
-                        top: 25,
+                        top: 5,
                         right: 0,
-                        left: 0,
-                        bottom: 25,
+                        left: -35,
+                        bottom: 5,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={true} vertical={false} />
@@ -93,6 +94,12 @@ export default function DwellTimeChart({ data, zones }: DwellTimeChartProps) {
                         itemStyle={{ color: '#fff' }}
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
                         formatter={(value: number | undefined) => [`${value || 0}s`, 'Avg Dwell Time']}
+                    />
+                    <Legend
+                        iconType="circle"
+                        verticalAlign="top"
+                        align="right"
+                        wrapperStyle={{ fontSize: '10px', paddingBottom: '10px', top: 0, right: 0 }}
                     />
                     <Bar dataKey="avgDwell" radius={[0, 4, 4, 0]} barSize={20}>
                         {chartData.map((entry, index) => (

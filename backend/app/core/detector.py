@@ -291,12 +291,18 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
             grid_y = min(max(grid_y, 0), HEATMAP_RESOLUTION - 1)
             heatmap_grid[grid_y, grid_x] += 1
             
+            # Track object status across all zones to determine dot color
+            is_active_in_any_zone = False
+            is_counted_in_any_zone = False
+            matches_any_zone_class = False
+
             # Check each zone
             for zd in zone_data:
                 # Only check if detection matches zone's target class
                 if detected_class != zd['class_id']:
                     continue
-                    
+                
+                matches_any_zone_class = True
                 zone_id = zd['id']
                 
                 # Check if object is in zone (different logic for line vs polygon)
@@ -346,14 +352,12 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                                     "direction": "in" if crossing_direction > 0 else "out"
                                 })
                             
-                            # Mark as currently crossing (blue indicator)
-                            cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1)
+                            # Mark as currently crossing (contributes to Blue status)
+                            is_active_in_any_zone = True
                         else:
-                            # Not crossing - show green if previously counted
+                            # Not crossing - check if previously counted (contributes to Green status)
                             if track_id in crossed_objects_per_zone[zone_id]:
-                                cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1)
-                            else:
-                                cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1)
+                                is_counted_in_any_zone = True
                     continue  # Skip polygon logic for line zones
                 else:
                     # For 3+ point polygon: use standard containment test
@@ -382,7 +386,8 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                         crossed_objects_per_zone[zone_id][track_id]['in_zone'] = True
                         crossed_objects_per_zone[zone_id][track_id]['entry_time'] = timestamp
                         
-                    cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Counting) GBR
+                    # Currently in zone -> Active (Blue)
+                    is_active_in_any_zone = True
 
                 else:
                     if track_id in crossed_objects_per_zone[zone_id]:
@@ -402,11 +407,15 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                             obj_data['in_zone'] = False
                         
                         if obj_data.get('counted', False):
-                            cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted) GBR
-                        else:
-                            cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
-                    else:
-                        cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted) GBR
+                            is_counted_in_any_zone = True
+            
+            # Draw dot based on priority: Active (Blue) > Counted (Green) > Detected (Red)
+            if is_active_in_any_zone:
+                cv2.circle(frame, (center_x, center_y), 9, (244, 133, 66), -1) # Blue (Active)
+            elif is_counted_in_any_zone:
+                cv2.circle(frame, (center_x, center_y), 9, (83, 168, 51), -1) # Green (Counted)
+            elif matches_any_zone_class:
+                cv2.circle(frame, (center_x, center_y), 9, (54, 67, 234), -1) # Red (Not Counted but Matched Class)
 
         # Draw all zones
         for zd in zone_data:

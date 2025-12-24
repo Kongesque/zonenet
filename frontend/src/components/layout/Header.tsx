@@ -19,7 +19,7 @@ export function Header({ children }: HeaderProps) {
     } | null>(null);
 
     useEffect(() => {
-        setMounted(true);
+        setTimeout(() => setMounted(true), 0);
 
         // Fetch GPU status
         api

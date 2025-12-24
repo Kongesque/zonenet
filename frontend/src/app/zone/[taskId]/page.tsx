@@ -68,8 +68,10 @@ export default function ZonePage() {
     // Initialize zones from job if exists
     useEffect(() => {
         if (job?.zones && job.zones.length > 0) {
-            setZones(job.zones);
-            setActiveZoneId(job.zones[0].id);
+            setTimeout(() => {
+                setZones(job.zones);
+                setActiveZoneId(job.zones[0].id);
+            }, 0);
         } else {
             // Create initial zone
             const initialZone: Zone = {
@@ -79,13 +81,17 @@ export default function ZonePage() {
                 color: getColorFromClassId(0),
                 label: "Zone 1",
             };
-            setZones([initialZone]);
-            setActiveZoneId(initialZone.id);
+            setTimeout(() => {
+                setZones([initialZone]);
+                setActiveZoneId(initialZone.id);
+            }, 0);
         }
 
-        if (job?.confidence) setConfidence(job.confidence);
-        if (job?.model) setModel(job.model);
-        if (job?.trackerConfig) setTrackerConfig(job.trackerConfig);
+        setTimeout(() => {
+            if (job?.confidence) setConfidence(job.confidence);
+            if (job?.model) setModel(job.model);
+            if (job?.trackerConfig) setTrackerConfig(job.trackerConfig);
+        }, 0);
     }, [job]);
 
     const handleFrameLoaded = useCallback((width: number, height: number) => {

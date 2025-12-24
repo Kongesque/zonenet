@@ -18,11 +18,13 @@ export default function HomePage() {
 
   // Load saved sidebar state after mount to prevent hydration mismatch
   useEffect(() => {
-    setMounted(true);
-    const saved = localStorage.getItem("sidebarOpen");
-    if (saved !== null) {
-      setSidebarOpen(saved === "true");
-    }
+    setTimeout(() => {
+      setMounted(true);
+      const saved = localStorage.getItem("sidebarOpen");
+      if (saved !== null) {
+        setSidebarOpen(saved === "true");
+      }
+    }, 0);
   }, []);
 
   const toggleSidebar = () => {

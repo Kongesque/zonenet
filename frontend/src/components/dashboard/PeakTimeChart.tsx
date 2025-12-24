@@ -29,11 +29,11 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
         const bucketSize = Math.max(1, Math.ceil(maxTime / 20));
         const maxBucket = Math.ceil(maxTime / bucketSize);
 
-        const timeline: Record<string, any>[] = [];
+        const timeline: Record<string, number | string>[] = [];
 
         for (let i = 0; i <= maxBucket; i++) {
             const timePoint = i * bucketSize;
-            const bucket: Record<string, any> = { name: `${timePoint}s` };
+            const bucket: Record<string, number | string> = { name: `${timePoint}s` };
             zones.forEach(z => bucket[z.id] = 0);
             timeline.push(bucket);
         }
@@ -44,7 +44,7 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
             if (bucketIndex >= 0 && bucketIndex < timeline.length) {
                 const zoneId = event.zone_id;
                 // If the event count is higher than what we have recorded for this bucket, update it
-                if (event.count > timeline[bucketIndex][zoneId]) {
+                if (event.count > (timeline[bucketIndex][zoneId] as number)) {
                     timeline[bucketIndex][zoneId] = event.count;
                 }
             }
@@ -62,15 +62,15 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
     }
 
     return (
-        <div className="h-full w-full min-h-[150px] overflow-hidden">
+        <div className="h-full w-full overflow-hidden">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                     data={chartData}
                     margin={{
-                        top: 25,
+                        top: 5,
                         right: 0,
                         left: 0,
-                        bottom: 25,
+                        bottom: 5,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
@@ -87,6 +87,7 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
+                        mirror={true}
                     />
                     <Tooltip
                         contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
@@ -94,7 +95,7 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
                     />
                     <Legend
-                        iconType="line"
+                        iconType="circle"
                         verticalAlign="top"
                         align="right"
                         wrapperStyle={{ fontSize: '10px', paddingBottom: '10px', top: 0, right: 0 }}

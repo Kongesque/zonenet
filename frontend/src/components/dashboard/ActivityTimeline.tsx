@@ -63,7 +63,7 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
         // This might be sparse. To make an Area chart, we might need to hold the "state" (current count).
 
         // Let's create a stateful timeline.
-        const timeline: Record<string, any>[] = [];
+        const timeline: Record<string, number | string>[] = [];
         const currentCounts: Record<string, number> = {};
         zones.forEach(z => currentCounts[z.id] = 0);
 
@@ -89,15 +89,15 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
             const startTime = i * bucketSize;
             const endTime = (i + 1) * bucketSize;
 
-            const bucket: Record<string, any> = { name: `${startTime}s` };
+            const bucket: Record<string, number | string> = { name: `${startTime}s` };
 
             zones.forEach(z => bucket[z.id] = 0);
 
             // Count events in this bucket
             while (eventIdx < sortedData.length && sortedData[eventIdx].time < endTime) {
                 const ev = sortedData[eventIdx];
-                if (bucket[ev.zone_id] !== undefined) {
-                    bucket[ev.zone_id]++;
+                if (typeof bucket[ev.zone_id] === 'number') {
+                    (bucket[ev.zone_id] as number)++;
                 }
                 eventIdx++;
             }
@@ -117,15 +117,15 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
     }
 
     return (
-        <div className="h-full w-full min-h-[150px] overflow-hidden">
+        <div className="h-full w-full">
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                     data={chartData}
                     margin={{
-                        top: 25,
+                        top: 5,
                         right: 0,
                         left: 0,
-                        bottom: 25,
+                        bottom: 5,
                     }}
                 >
                     <defs>
