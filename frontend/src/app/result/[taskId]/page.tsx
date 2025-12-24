@@ -5,10 +5,13 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Download, FileJson, Table, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import { Download, FileJson, Table, Clock, Users, Activity, BarChart3 } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
+import DwellTimeChart from "@/components/dashboard/DwellTimeChart";
+import ClassDistributionChart from "@/components/dashboard/ClassDistributionChart";
+import PeakTimeChart from "@/components/dashboard/PeakTimeChart";
+import Sparkline from "@/components/dashboard/Sparkline";
 
 export default function ResultPage() {
     const params = useParams();
@@ -16,6 +19,7 @@ export default function ResultPage() {
     const router = useRouter();
     const taskId = params.taskId as string;
     const [activeTab, setActiveTab] = useState<"actions" | "details">("actions");
+    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "classes" | "peak">("activity");
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
@@ -117,65 +121,82 @@ export default function ResultPage() {
                             loop
                             muted
                         />
-                        {/* Floating Overlay for FPS/Res */}
-
                     </div>
                 </BentoCard>
 
                 {/* Zone Statistics - Spans 4 cols, 8 rows (Right Sidebar) */}
                 <BentoCard className="col-span-4 row-span-8" title="Zone Analysis">
-                    <div className="space-y-3 px-4 pb-4 pt-0">
+                    <div className="space-y-3 px-4 pb-4 pt-0 h-full overflow-y-auto pr-2">
                         {job.zones?.map((zone) => {
                             const stats = zoneStats[zone.id] || { total: 0, peak: 0 };
                             const isLine = zone.points?.length === 2;
                             const lineCrossing = job.lineCrossingData?.[zone.id];
+
+                            // Calculate avg dwell for this zone
+                            const zoneDwellEvents = job.dwellData?.filter(d => d.zone_id === zone.id) || [];
+                            const totalDwell = zoneDwellEvents.reduce((acc, curr) => acc + curr.duration, 0);
+                            const avgDwell = zoneDwellEvents.length > 0 ? (totalDwell / zoneDwellEvents.length).toFixed(1) : "0.0";
 
                             return (
                                 <div
                                     key={zone.id}
                                     className="bg-white/5 border border-white/10 rounded-lg p-3 hover:bg-white/10 transition-colors"
                                 >
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <div
-                                            className="w-2 h-2 rounded-full shadow-[0_0_8px]"
-                                            style={{
-                                                backgroundColor: `rgb(${zone.color?.join(",")})`,
-                                                boxShadow: `0 0 10px rgb(${zone.color?.join(",")})`
-                                            }}
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-2 h-2 rounded-full shadow-[0_0_8px]"
+                                                style={{
+                                                    backgroundColor: `rgb(${zone.color?.join(",")})`,
+                                                    boxShadow: `0 0 10px rgb(${zone.color?.join(",")})`
+                                                }}
+                                            />
+                                            <span className="text-sm font-medium text-white/90 truncate max-w-[120px]">
+                                                {zone.label}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    {/* Sparkline */}
+                                    <div className="mb-3 -mx-1">
+                                        <Sparkline
+                                            data={job.detectionData}
+                                            zoneId={zone.id}
+                                            color={zone.color}
+                                            duration={job.processTime || 10}
                                         />
-                                        <span className="text-sm font-medium text-white/90 truncate">
-                                            {zone.label}
-                                        </span>
                                     </div>
 
                                     {isLine && lineCrossing ? (
-                                        <div className="grid grid-cols-2 gap-2 text-center">
-                                            <div className="bg-black/20 rounded p-1">
-                                                <p className="text-lg font-bold text-green-400 leading-none">
-                                                    {lineCrossing.in}
-                                                </p>
-                                                <p className="text-[10px] text-white/50 uppercase tracking-widest">IN</p>
+                                        <div className="grid grid-cols-2 gap-2 text-center items-end">
+                                            <div className="text-left">
+                                                <p className="text-xs text-white/40 mb-0.5">In / Out</p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <span className="text-sm font-bold text-green-400">{lineCrossing.in}</span>
+                                                    <span className="text-xs text-white/20">/</span>
+                                                    <span className="text-sm font-bold text-red-400">{lineCrossing.out}</span>
+                                                </div>
                                             </div>
-                                            <div className="bg-black/20 rounded p-1">
-                                                <p className="text-lg font-bold text-red-400 leading-none">
-                                                    {lineCrossing.out}
-                                                </p>
-                                                <p className="text-[10px] text-white/50 uppercase tracking-widest">OUT</p>
+                                            <div className="text-right">
+                                                <p className="text-xs text-white/40 mb-0.5">Net Flow</p>
+                                                <span className={`text-sm font-bold ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-white'}`}>
+                                                    {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
+                                                </span>
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-2 gap-2 text-center">
-                                            <div className="bg-black/20 rounded p-1">
-                                                <p className="text-lg font-bold text-white leading-none">
+                                        <div className="grid grid-cols-2 gap-2 text-center items-end">
+                                            <div className="text-left">
+                                                <p className="text-xs text-white/40 mb-0.5">Count</p>
+                                                <p className="text-sm font-bold text-white leading-none">
                                                     {stats.total}
                                                 </p>
-                                                <p className="text-[10px] text-white/50 uppercase tracking-widest">Total</p>
                                             </div>
-                                            <div className="bg-black/20 rounded p-1">
-                                                <p className="text-lg font-bold text-white leading-none">
-                                                    {stats.peak}
-                                                </p>
-                                                <p className="text-[10px] text-white/50 uppercase tracking-widest">Peak</p>
+                                            <div className="text-right">
+                                                <p className="text-xs text-white/40 mb-0.5">Avg Dwell</p>
+                                                <span className="text-sm font-bold text-amber-400">
+                                                    {avgDwell}s
+                                                </span>
                                             </div>
                                         </div>
                                     )}
@@ -185,14 +206,78 @@ export default function ResultPage() {
                     </div>
                 </BentoCard>
 
-                {/* Activity Timeline - Spans 8 cols, 4 rows (Bottom Left) */}
+                {/* Analysis Dashboard - Spans 8 cols, 4 rows (Bottom Left) */}
                 <BentoCard className="col-span-8 row-span-4" noScroll>
-                    <div className="h-full w-full p-4">
-                        <ActivityTimeline
-                            data={job.detectionData}
-                            zones={job.zones}
-                            duration={job.processTime} // Approx total duration
-                        />
+                    <div className="flex flex-col h-full w-full">
+                        {/* Analysis Tabs */}
+                        <div className="flex items-center gap-1 px-4 pt-2 border-b border-white/5">
+                            <button
+                                onClick={() => setAnalysisTab("activity")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "activity"
+                                    ? "border-blue-500 text-blue-400"
+                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                <Activity className="w-3.5 h-3.5" /> Activity
+                            </button>
+                            <button
+                                onClick={() => setAnalysisTab("dwell")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "dwell"
+                                    ? "border-amber-500 text-amber-400"
+                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                <Clock className="w-3.5 h-3.5" /> Dwell Time
+                            </button>
+                            <button
+                                onClick={() => setAnalysisTab("classes")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "classes"
+                                    ? "border-green-500 text-green-400"
+                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                <Users className="w-3.5 h-3.5" /> Demographics
+                            </button>
+                            <button
+                                onClick={() => setAnalysisTab("peak")}
+                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "peak"
+                                    ? "border-red-500 text-red-400"
+                                    : "border-transparent text-white/40 hover:text-white/60"
+                                    }`}
+                            >
+                                <BarChart3 className="w-3.5 h-3.5" /> Peak Analysis
+                            </button>
+                        </div>
+
+                        {/* Chart Viewport */}
+                        <div className="flex-1 p-4 overflow-hidden relative">
+                            {analysisTab === "activity" && (
+                                <ActivityTimeline
+                                    data={job.detectionData}
+                                    zones={job.zones}
+                                    duration={job.processTime}
+                                />
+                            )}
+                            {analysisTab === "dwell" && (
+                                <DwellTimeChart
+                                    data={job.dwellData}
+                                    zones={job.zones}
+                                />
+                            )}
+                            {analysisTab === "classes" && (
+                                <ClassDistributionChart
+                                    data={job.detectionData}
+                                    zones={job.zones}
+                                />
+                            )}
+                            {analysisTab === "peak" && (
+                                <PeakTimeChart
+                                    data={job.detectionData}
+                                    zones={job.zones}
+                                    duration={job.processTime}
+                                />
+                            )}
+                        </div>
                     </div>
                 </BentoCard>
 
@@ -286,3 +371,4 @@ export default function ResultPage() {
         </main>
     );
 }
+
