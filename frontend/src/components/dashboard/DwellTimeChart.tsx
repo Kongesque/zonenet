@@ -63,10 +63,10 @@ export default function DwellTimeChart({ data, zones }: DwellTimeChartProps) {
                     data={chartData}
                     layout="vertical"
                     margin={{
-                        top: 5,
-                        right: 30,
-                        left: 40,
-                        bottom: 5,
+                        top: 25,
+                        right: 0,
+                        left: 0,
+                        bottom: 25,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={true} vertical={false} />

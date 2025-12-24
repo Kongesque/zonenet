@@ -9,7 +9,6 @@ import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame } f
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
 import DwellTimeChart from "@/components/dashboard/DwellTimeChart";
-import ClassDistributionChart from "@/components/dashboard/ClassDistributionChart";
 import PeakTimeChart from "@/components/dashboard/PeakTimeChart";
 import HeatmapChart from "@/components/dashboard/HeatmapChart";
 import Sparkline from "@/components/dashboard/Sparkline";
@@ -19,8 +18,10 @@ export default function ResultPage() {
 
     const router = useRouter();
     const taskId = params.taskId as string;
+
     const [activeTab, setActiveTab] = useState<"actions" | "details">("actions");
-    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "classes" | "peak" | "heatmap">("activity");
+    const [analysisTab, setAnalysisTab] = useState<"activity" | "dwell" | "peak">("activity");
+    const [isHeatmapEnabled, setIsHeatmapEnabled] = useState(false);
 
     const { data: job, isLoading } = useQuery({
         queryKey: ["job", taskId],
@@ -104,10 +105,10 @@ export default function ResultPage() {
 
     return (
         <main className="h-full w-full overflow-hidden bg-background text-text-color p-4">
-            <BentoGrid className="grid-cols-12 grid-rows-12">
-                {/* Main Video Tile - Spans 8 cols, 8 rows (Matches screen aspect ratio 16:9) */}
+            <BentoGrid className="grid-cols-12 grid-rows-[auto_1fr]">
+                {/* Main Video Tile - Spans 8 cols, aspect-video forces 16:9 height */}
                 <BentoCard
-                    className="col-span-8 row-span-8 p-0"
+                    className="col-span-8 aspect-video p-0"
                     title={job.name || "Video Feed"}
                     icon={<div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />}
                     noScroll
@@ -123,12 +124,40 @@ export default function ResultPage() {
                             loop
                             muted
                         />
+                        {/* Heatmap Overlay */}
+                        {isHeatmapEnabled && (
+                            <div className="absolute inset-0 pointer-events-none z-10">
+                                <HeatmapChart
+                                    data={job.heatmapData}
+                                    zones={job.zones}
+                                    overlay={true}
+                                />
+                            </div>
+                        )}
+
                     </div>
                 </BentoCard>
 
-                {/* Zone Statistics - Spans 4 cols, 8 rows (Right Sidebar) */}
-                <BentoCard className="col-span-4 row-span-8" title="Zone Analysis">
+                {/* Zone Statistics - Spans 4 cols, matches height of video row automatically */}
+                <BentoCard className="col-span-4 h-full" title="Zone Analysis">
                     <div className="space-y-3 px-4 pb-4 pt-0 h-full overflow-y-auto pr-2">
+                        {/* Heatmap Toggle Control */}
+                        <div className="flex items-center justify-between bg-btn-bg/20 border border-primary-border rounded-lg p-3 mb-2">
+                            <div className="flex items-center gap-2">
+                                <Flame className={`w-4 h-4 ${isHeatmapEnabled ? "text-orange-500 fill-orange-500" : "text-secondary-text"}`} />
+                                <span className="text-sm font-medium text-text-color">Show Heatmap</span>
+                            </div>
+                            <button
+                                onClick={() => setIsHeatmapEnabled(!isHeatmapEnabled)}
+                                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${isHeatmapEnabled ? "bg-orange-500" : "bg-gray-700"}`}
+                            >
+                                <span
+                                    className={`${isHeatmapEnabled ? "translate-x-5" : "translate-x-1"
+                                        } inline-block h-3 w-3 transform rounded-full bg-white transition-transform`}
+                                />
+                            </button>
+                        </div>
+
                         {job.zones?.map((zone) => {
                             const stats = zoneStats[zone.id] || { total: 0, peak: 0 };
                             const isLine = zone.points?.length === 2;
@@ -208,8 +237,8 @@ export default function ResultPage() {
                     </div>
                 </BentoCard>
 
-                {/* Analysis Dashboard - Spans 8 cols, 4 rows (Bottom Left) */}
-                <BentoCard className="col-span-8 row-span-4" noScroll>
+                {/* Analysis Dashboard - Spans 8 cols, fills remaining height */}
+                <BentoCard className="col-span-8" noScroll>
                     <div className="flex flex-col h-full w-full">
                         {/* Analysis Tabs */}
                         <div className="flex items-center gap-1 px-4 pt-2 border-b border-primary-border">
@@ -232,15 +261,6 @@ export default function ResultPage() {
                                 <Clock className="w-3.5 h-3.5" /> Dwell Time
                             </button>
                             <button
-                                onClick={() => setAnalysisTab("classes")}
-                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "classes"
-                                    ? "border-green-500 text-green-500"
-                                    : "border-transparent text-secondary-text hover:text-text-color"
-                                    }`}
-                            >
-                                <Users className="w-3.5 h-3.5" /> Demographics
-                            </button>
-                            <button
                                 onClick={() => setAnalysisTab("peak")}
                                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "peak"
                                     ? "border-red-500 text-red-500"
@@ -248,15 +268,6 @@ export default function ResultPage() {
                                     }`}
                             >
                                 <BarChart3 className="w-3.5 h-3.5" /> Peak Analysis
-                            </button>
-                            <button
-                                onClick={() => setAnalysisTab("heatmap")}
-                                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 transition-all ${analysisTab === "heatmap"
-                                    ? "border-orange-500 text-orange-500"
-                                    : "border-transparent text-secondary-text hover:text-text-color"
-                                    }`}
-                            >
-                                <Flame className="w-3.5 h-3.5" /> Heatmap
                             </button>
                         </div>
 
@@ -275,31 +286,20 @@ export default function ResultPage() {
                                     zones={job.zones}
                                 />
                             )}
-                            {analysisTab === "classes" && (
-                                <ClassDistributionChart
-                                    data={job.detectionData}
-                                    zones={job.zones}
-                                />
-                            )}
                             {analysisTab === "peak" && (
                                 <PeakTimeChart
                                     data={job.detectionData}
+
                                     zones={job.zones}
                                     duration={job.processTime}
-                                />
-                            )}
-                            {analysisTab === "heatmap" && (
-                                <HeatmapChart
-                                    data={job.heatmapData}
-                                    zones={job.zones}
                                 />
                             )}
                         </div>
                     </div>
                 </BentoCard>
 
-                {/* Control Panel / Actions - Spans 4 cols, 4 rows (Bottom Right) */}
-                <BentoCard className="col-span-4 row-span-4" noScroll>
+                {/* Control Panel / Actions - Spans 4 cols, fills remaining height */}
+                <BentoCard className="col-span-4" noScroll>
                     <div className="flex flex-col h-full p-4 overflow-hidden">
                         {/* Tab Switcher */}
                         <div className="flex p-1 bg-btn-bg rounded-lg mb-4 shrink-0 border border-primary-border">
@@ -325,7 +325,7 @@ export default function ResultPage() {
 
                         <div className="flex-1 min-h-0">
                             {activeTab === "actions" ? (
-                                <div className="flex flex-col gap-3 h-full justify-between">
+                                <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
                                     <button
                                         onClick={() => router.push(`/zone/${taskId}`)}
                                         className="w-full py-2 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 text-sm font-medium transition-all shrink-0"
@@ -351,7 +351,9 @@ export default function ResultPage() {
                                     </div>
 
                                     <a
-                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-text-color text-bg-color hover:opacity-90 text-sm font-bold transition-all shrink-0 mt-auto"
+                                        href={videoUrl}
+                                        download={`video-${taskId}.mp4`}
+                                        className="w-full py-2 flex items-center justify-center gap-2 rounded-lg bg-text-color text-bg-color hover:opacity-90 text-sm font-bold transition-all shrink-0"
                                     >
                                         <Download className="w-4 h-4" />
                                         Download Video

@@ -67,10 +67,10 @@ export default function PeakTimeChart({ data, zones, duration }: PeakTimeChartPr
                 <LineChart
                     data={chartData}
                     margin={{
-                        top: 5,
-                        right: 10,
+                        top: 25,
+                        right: 0,
                         left: 0,
-                        bottom: 5,
+                        bottom: 25,
                     }}
                 >
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />

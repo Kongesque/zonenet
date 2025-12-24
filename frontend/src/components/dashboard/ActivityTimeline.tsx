@@ -122,10 +122,10 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                 <AreaChart
                     data={chartData}
                     margin={{
-                        top: 5,
+                        top: 25,
                         right: 0,
                         left: 0,
-                        bottom: 5,
+                        bottom: 25,
                     }}
                 >
                     <defs>

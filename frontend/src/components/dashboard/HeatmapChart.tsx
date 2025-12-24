@@ -6,6 +6,7 @@ import type { Zone } from "@/utils/types";
 interface HeatmapChartProps {
     data: number[][] | null;
     zones?: Zone[];
+    overlay?: boolean;
 }
 
 // Color gradient for heatmap: blue (cold) -> cyan -> green -> yellow -> red (hot)
@@ -49,7 +50,7 @@ function getHeatmapColor(value: number, maxValue: number): [number, number, numb
     return [r, g, b, alpha];
 }
 
-export default function HeatmapChart({ data, zones }: HeatmapChartProps) {
+export default function HeatmapChart({ data, zones, overlay = false }: HeatmapChartProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -71,8 +72,12 @@ export default function HeatmapChart({ data, zones }: HeatmapChartProps) {
         canvas.height = height;
 
         // Clear canvas
-        ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
-        ctx.fillRect(0, 0, width, height);
+        if (!overlay) {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
+            ctx.fillRect(0, 0, width, height);
+        } else {
+            ctx.clearRect(0, 0, width, height);
+        }
 
         const gridHeight = data.length;
         const gridWidth = data[0]?.length || 0;
@@ -139,6 +144,9 @@ export default function HeatmapChart({ data, zones }: HeatmapChartProps) {
 
                 // Normalize zone points to canvas dimensions
                 // Assuming zone points are in original video coordinates (0-1 normalized or absolute)
+                // If the zone point is > 1 it is likely absolute pixel coordinates.
+                // We need to know the video source dimensions to normalize correctly if they are absolute.
+                // For now, using simplistic heuristic if values > 1.
                 const scaledPoints = zone.points.map((p) => ({
                     x: (p.x / (zones[0]?.points?.[0]?.x > 1 ? 1920 : 1)) * width,
                     y: (p.y / (zones[0]?.points?.[0]?.y > 1 ? 1080 : 1)) * height,
@@ -161,43 +169,48 @@ export default function HeatmapChart({ data, zones }: HeatmapChartProps) {
             ctx.setLineDash([]);
         }
 
-        // Draw legend
-        const legendWidth = 20;
-        const legendHeight = height * 0.6;
-        const legendX = width - legendWidth - 20;
-        const legendY = (height - legendHeight) / 2;
+        // Draw legend (only if not overlay to avoid clutter, or maybe smaller?)
+        // For overlay, we skip the legend to keep the video clear.
+        if (!overlay) {
+            const legendWidth = 20;
+            const legendHeight = height * 0.6;
+            const legendX = width - legendWidth - 20;
+            const legendY = (height - legendHeight) / 2;
 
-        // Legend gradient
-        const gradient = ctx.createLinearGradient(legendX, legendY + legendHeight, legendX, legendY);
-        gradient.addColorStop(0, "rgba(0, 0, 255, 0.8)");
-        gradient.addColorStop(0.25, "rgba(0, 255, 255, 0.8)");
-        gradient.addColorStop(0.5, "rgba(0, 255, 0, 0.8)");
-        gradient.addColorStop(0.75, "rgba(255, 255, 0, 0.8)");
-        gradient.addColorStop(1, "rgba(255, 0, 0, 0.8)");
+            // Legend gradient
+            const gradient = ctx.createLinearGradient(legendX, legendY + legendHeight, legendX, legendY);
+            gradient.addColorStop(0, "rgba(0, 0, 255, 0.8)");
+            gradient.addColorStop(0.25, "rgba(0, 255, 255, 0.8)");
+            gradient.addColorStop(0.5, "rgba(0, 255, 0, 0.8)");
+            gradient.addColorStop(0.75, "rgba(255, 255, 0, 0.8)");
+            gradient.addColorStop(1, "rgba(255, 0, 0, 0.8)");
 
-        ctx.fillStyle = gradient;
-        ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+            ctx.fillStyle = gradient;
+            ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
 
-        // Legend border
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-        ctx.lineWidth = 1;
-        ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+            // Legend border
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
 
-        // Legend labels
-        ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-        ctx.font = "10px system-ui";
-        ctx.textAlign = "right";
-        ctx.fillText("High", legendX - 5, legendY + 10);
-        ctx.fillText("Low", legendX - 5, legendY + legendHeight - 2);
+            // Legend labels
+            ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+            ctx.font = "10px system-ui";
+            ctx.textAlign = "right";
+            ctx.fillText("High", legendX - 5, legendY + 10);
+            ctx.fillText("Low", legendX - 5, legendY + legendHeight - 2);
+        }
 
     }, [data, zones]);
 
-    if (!data) {
+    if (!data && !overlay) {
         return (
             <div className="w-full h-full flex items-center justify-center text-secondary-text">
                 <p>No heatmap data available. Process a video to generate activity heatmap.</p>
             </div>
         );
+    } else if (!data) {
+        return null;
     }
 
     return (
@@ -206,7 +219,7 @@ export default function HeatmapChart({ data, zones }: HeatmapChartProps) {
                 ref={canvasRef}
                 className="w-full h-full rounded-lg"
             />
-            <div className="absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-xs text-white/80">
+            <div className={`absolute top-2 left-2 bg-black/50 px-2 py-1 rounded text-xs text-white/80 ${overlay ? 'hidden' : ''}`}>
                 Activity Heatmap
             </div>
         </div>
