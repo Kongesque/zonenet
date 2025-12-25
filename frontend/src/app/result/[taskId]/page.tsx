@@ -396,7 +396,7 @@ export default function ResultPage() {
                                 <DashboardCard
                                     title="Bounce Rate"
                                     icon={<MousePointerClick className="w-3.5 h-3.5 text-red-400" />}
-                                    tooltip="Percentage of visits shorter than 1 second (fleeting detections)."
+                                    tooltip="Percentage of visits shorter than 5 seconds (fleeting detections)."
                                     contentClassName="h-[200px]"
                                 >
                                     <BounceRateChart

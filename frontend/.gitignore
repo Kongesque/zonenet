@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Mock Data & Routes
+src/app/api/mock-data.ts
+src/app/api/jobs/
+src/app/api/system-info/
+public/media/mock/
+clean_mock_script.sh
+generate_mock.py
+NOTE.md
