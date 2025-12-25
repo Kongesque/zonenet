@@ -50,7 +50,7 @@ function getHeatmapColor(value: number, maxValue: number): [number, number, numb
     return [r, g, b, alpha];
 }
 
-export default function HeatmapChart({ data, zones, overlay = false }: HeatmapChartProps) {
+export default function HeatmapChart({ data, zones, overlay = false, videoWidth, videoHeight }: HeatmapChartProps & { videoWidth?: number; videoHeight?: number }) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -92,8 +92,30 @@ export default function HeatmapChart({ data, zones, overlay = false }: HeatmapCh
         }
 
         // Calculate cell size
-        const cellWidth = width / gridWidth;
-        const cellHeight = height / gridHeight;
+        // If overlay, we need to respect the video aspect ratio (object-contain behavior)
+        let renderX = 0;
+        let renderY = 0;
+        let renderWidth = width;
+        let renderHeight = height;
+
+        if (overlay && videoWidth && videoHeight) {
+            const containerRatio = width / height;
+            const videoRatio = videoWidth / videoHeight;
+
+            if (containerRatio > videoRatio) {
+                // Container is wider than video -> video fits height, centered horizontally
+                renderHeight = height;
+                renderWidth = height * videoRatio;
+                renderX = (width - renderWidth) / 2;
+                renderY = 0;
+            } else {
+                // Container is taller than video -> video fits width, centered vertically
+                renderWidth = width;
+                renderHeight = width / videoRatio;
+                renderX = 0;
+                renderY = (height - renderHeight) / 2;
+            }
+        }
 
         // Create temporary canvas for smoothing
         const tempCanvas = document.createElement("canvas");
@@ -121,13 +143,17 @@ export default function HeatmapChart({ data, zones, overlay = false }: HeatmapCh
         // Draw scaled and smoothed heatmap
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
-        ctx.drawImage(tempCanvas, 0, 0, width, height);
 
-        // Apply Gaussian-like blur effect by drawing multiple times with offset
+        // Draw into the calculated render area
+        ctx.drawImage(tempCanvas, renderX, renderY, renderWidth, renderHeight);
+
+        // Apply Gaussian-like blur effect
         ctx.globalAlpha = 0.3;
         for (let i = 1; i <= 3; i++) {
-            ctx.drawImage(tempCanvas, -i, 0, width + i * 2, height);
-            ctx.drawImage(tempCanvas, 0, -i, width, height + i * 2);
+            // Adjust blur drawing to match render area roughly
+            // Note: simple blur expansion might bleed outside video area, but acceptable for now
+            ctx.drawImage(tempCanvas, renderX - i, renderY, renderWidth + i * 2, renderHeight);
+            ctx.drawImage(tempCanvas, renderX, renderY - i, renderWidth, renderHeight + i * 2);
         }
         ctx.globalAlpha = 1;
 
@@ -142,15 +168,31 @@ export default function HeatmapChart({ data, zones, overlay = false }: HeatmapCh
 
                 ctx.beginPath();
 
-                // Normalize zone points to canvas dimensions
-                // Assuming zone points are in original video coordinates (0-1 normalized or absolute)
-                // If the zone point is > 1 it is likely absolute pixel coordinates.
-                // We need to know the video source dimensions to normalize correctly if they are absolute.
-                // For now, using simplistic heuristic if values > 1.
-                const scaledPoints = zone.points.map((p) => ({
-                    x: (p.x / (zones[0]?.points?.[0]?.x > 1 ? 1920 : 1)) * width,
-                    y: (p.y / (zones[0]?.points?.[0]?.y > 1 ? 1080 : 1)) * height,
-                }));
+                // Normalize zone points to render dimensions
+                const scaledPoints = zone.points.map((p) => {
+                    // Check if points are normalized (0-1) or absolute
+                    // Usage of 1920/1080 heuristic fallback is risky but kept for consistency if we don't know absolute
+                    // Preferably use videoWidth/Height if available
+
+                    const isNormalized = p.x <= 1 && p.y <= 1; // Simple heuristic
+
+                    let normX = p.x;
+                    let normY = p.y;
+
+                    if (!isNormalized) {
+                        // Inherit logic: if > 1, assume absolute. 
+                        // If we have videoWidth, normalize by it. Else fallback to 1920?
+                        const vW = videoWidth || (p.x > 1 ? 1920 : 1);
+                        const vH = videoHeight || (p.y > 1 ? 1080 : 1);
+                        normX = p.x / vW;
+                        normY = p.y / vH;
+                    }
+
+                    return {
+                        x: renderX + normX * renderWidth,
+                        y: renderY + normY * renderHeight,
+                    };
+                });
 
                 if (zone.points.length === 2) {
                     // Line zone
@@ -169,8 +211,7 @@ export default function HeatmapChart({ data, zones, overlay = false }: HeatmapCh
             ctx.setLineDash([]);
         }
 
-        // Draw legend (only if not overlay to avoid clutter, or maybe smaller?)
-        // For overlay, we skip the legend to keep the video clear.
+        // Draw legend (only if not overlay)
         if (!overlay) {
             const legendWidth = 20;
             const legendHeight = height * 0.6;
@@ -201,7 +242,7 @@ export default function HeatmapChart({ data, zones, overlay = false }: HeatmapCh
             ctx.fillText("Low", legendX - 5, legendY + legendHeight - 2);
         }
 
-    }, [data, zones]);
+    }, [data, zones, overlay, videoWidth, videoHeight]);
 
     if (!data && !overlay) {
         return (

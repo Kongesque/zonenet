@@ -138,6 +138,8 @@ export default function ResultPage() {
                                         data={job.heatmapData}
                                         zones={job.zones}
                                         overlay={true}
+                                        videoWidth={job.frameWidth}
+                                        videoHeight={job.frameHeight}
                                     />
                                 </div>
                             )}
