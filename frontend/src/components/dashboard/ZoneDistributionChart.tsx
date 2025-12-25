@@ -8,45 +8,48 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
-import { Zone } from "@/utils/types";
-import { COCO_CLASSES } from "@/utils/types";
-import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors"; // Use shared colors
+import { DwellEvent, Zone } from "@/utils/types";
+import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors";
 
-interface ClassBreakdownChartProps {
+interface ZoneDistributionChartProps {
+    dwellData: DwellEvent[];
     zones: Zone[];
 }
 
-export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps) {
+export default function ZoneDistributionChart({ dwellData, zones }: ZoneDistributionChartProps) {
     const chartData = useMemo(() => {
-        if (!zones || zones.length === 0) return [];
+        if (!dwellData || dwellData.length === 0 || !zones || zones.length === 0) {
+            return [];
+        }
 
-        // Count zones by class ID
-        const classCounts: Record<number, number> = {};
-
+        // Count unique visitors per zone based on dwell events
+        const zoneCounts: Record<string, number> = {};
         zones.forEach(zone => {
-            const classId = zone.classId;
-            if (!classCounts[classId]) {
-                classCounts[classId] = 0;
-            }
-            classCounts[classId]++;
+            zoneCounts[zone.id] = 0;
         });
 
-        // Convert to chart data
-        return Object.entries(classCounts).map(([classId, count]) => {
-            const id = parseInt(classId);
-            return {
-                name: COCO_CLASSES[id] || `Class ${id}`,
-                value: count,
-                classId: id,
-                color: CLASS_COLORS[id] || DEFAULT_COLOR
-            };
-        }).sort((a, b) => b.value - a.value);
-    }, [zones]);
+        dwellData.forEach(event => {
+            if (zoneCounts[event.zone_id] !== undefined) {
+                zoneCounts[event.zone_id]++;
+            }
+        });
 
-    if (!zones || zones.length === 0) {
+        // Build chart data using CLASS_COLORS based on zone's classId
+        return zones
+            .map(zone => ({
+                name: zone.label,
+                id: zone.id,
+                value: zoneCounts[zone.id] || 0,
+                color: CLASS_COLORS[zone.classId] || DEFAULT_COLOR
+            }))
+            .filter(item => item.value > 0)
+            .sort((a, b) => b.value - a.value);
+    }, [dwellData, zones]);
+
+    if (!dwellData || dwellData.length === 0 || chartData.length === 0) {
         return (
             <div className="flex h-full items-center justify-center text-secondary-text text-sm">
-                No zones defined
+                No zone data available
             </div>
         );
     }
@@ -56,7 +59,7 @@ export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps)
             {/* Legend on the left - Absolute positioned to center the chart itself */}
             <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col justify-center gap-y-1 text-[10px] z-10 pl-1">
                 {chartData.map(item => (
-                    <div key={item.classId} className="flex items-center gap-1">
+                    <div key={item.id} className="flex items-center gap-1">
                         <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
                         <span className="text-secondary-text whitespace-nowrap">{item.name}: {item.value}</span>
                     </div>
@@ -102,7 +105,7 @@ export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps)
                         <Tooltip
                             contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
                             itemStyle={{ color: '#fff' }}
-                            formatter={((value: number | undefined) => [`${value ?? 0} zone${(value ?? 0) !== 1 ? 's' : ''}`, 'Count']) as never}
+                            formatter={((value: number | undefined) => [`${value ?? 0} visitor${(value ?? 0) !== 1 ? 's' : ''}`, 'Count']) as never}
                             allowEscapeViewBox={{ x: false, y: true }}
                             wrapperStyle={{ zIndex: 100 }}
                         />

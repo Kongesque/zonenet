@@ -6,55 +6,54 @@ import {
     Bar,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     ResponsiveContainer,
     Cell
 } from "recharts";
-import { DwellEvent } from "@/utils/types";
+import { DwellEvent, Zone } from "@/utils/types";
+import { ANALYTICS_COLORS } from "@/utils/colors";
 
 interface DwellDistributionChartProps {
     data: DwellEvent[];
+    zones: Zone[];
 }
 
-// Define dwell time buckets
+// Define dwell time buckets using unified colors
 const DWELL_BUCKETS = [
-    { label: "0-5s", min: 0, max: 5, color: "#22c55e" },      // Quick pass
-    { label: "5-15s", min: 5, max: 15, color: "#84cc16" },    // Brief stop
-    { label: "15-30s", min: 15, max: 30, color: "#eab308" },  // Moderate interest
-    { label: "30-60s", min: 30, max: 60, color: "#f97316" },  // High interest
-    { label: "60s+", min: 60, max: Infinity, color: "#ef4444" }, // Extended stay
+    { label: "0-5s", min: 0, max: 5, color: ANALYTICS_COLORS.dwellBuckets[0] },
+    { label: "5-15s", min: 5, max: 15, color: ANALYTICS_COLORS.dwellBuckets[1] },
+    { label: "15-30s", min: 15, max: 30, color: ANALYTICS_COLORS.dwellBuckets[2] },
+    { label: "30-60s", min: 30, max: 60, color: ANALYTICS_COLORS.dwellBuckets[3] },
+    { label: "60s+", min: 60, max: Infinity, color: ANALYTICS_COLORS.dwellBuckets[4] },
 ];
 
-export default function DwellDistributionChart({ data }: DwellDistributionChartProps) {
-    const chartData = useMemo(() => {
-        if (!data || data.length === 0) return [];
+interface ZoneChartData {
+    zone: Zone;
+    buckets: { label: string; count: number; color: string }[];
+}
 
-        // Count events in each bucket
-        const bucketCounts = DWELL_BUCKETS.map(bucket => ({
-            ...bucket,
-            count: 0,
-            percentage: 0
-        }));
+export default function DwellDistributionChart({ data, zones }: DwellDistributionChartProps) {
+    const zoneCharts = useMemo(() => {
+        if (!data || data.length === 0 || !zones || zones.length === 0) {
+            return [];
+        }
 
-        data.forEach(event => {
-            const duration = event.duration;
-            for (let i = 0; i < bucketCounts.length; i++) {
-                if (duration >= bucketCounts[i].min && duration < bucketCounts[i].max) {
-                    bucketCounts[i].count++;
-                    break;
-                }
-            }
+        // Build chart data per zone
+        const charts: ZoneChartData[] = zones.map(zone => {
+            const zoneDwells = data.filter(d => d.zone_id === zone.id);
+
+            const buckets = DWELL_BUCKETS.map(bucket => {
+                const count = zoneDwells.filter(
+                    d => d.duration >= bucket.min && d.duration < bucket.max
+                ).length;
+                return { label: bucket.label, count, color: bucket.color };
+            });
+
+            return { zone, buckets };
         });
 
-        // Calculate percentages
-        const total = data.length;
-        bucketCounts.forEach(bucket => {
-            bucket.percentage = total > 0 ? Math.round((bucket.count / total) * 100) : 0;
-        });
-
-        return bucketCounts;
-    }, [data]);
+        return charts;
+    }, [data, zones]);
 
     if (!data || data.length === 0) {
         return (
@@ -65,49 +64,55 @@ export default function DwellDistributionChart({ data }: DwellDistributionChartP
     }
 
     return (
-        <div className="h-full w-full">
-            <ResponsiveContainer width="100%" height="100%">
-                <BarChart
-                    data={chartData}
-                    margin={{
-                        top: 20,
-                        right: 10,
-                        left: -10,
-                        bottom: 5,
-                    }}
-                >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
-                    <XAxis
-                        dataKey="label"
-                        stroke="#666"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ dy: 5 }}
-                    />
-                    <YAxis
-                        stroke="#666"
-                        fontSize={10}
-                        tickLine={false}
-                        axisLine={false}
-                        label={{ value: 'Count', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#666' }}
-                    />
-                    <Tooltip
-                        cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff' }}
-                        labelStyle={{ color: '#999', marginBottom: '4px' }}
-                        formatter={((value: number | undefined, _name: string | undefined, props: { payload: { percentage: number; label: string } }) => {
-                            return [`${value ?? 0} visitors (${props.payload.percentage}%)`, props.payload.label];
-                        }) as never}
-                    />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]} barSize={32} isAnimationActive={false}>
-                        {chartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
+        <div className="h-full w-full grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(zones.length, 2)}, 1fr)` }}>
+            {zoneCharts.map(({ zone, buckets }) => (
+                <div key={zone.id} className="flex flex-col min-h-0">
+                    {/* Zone Label */}
+                    <div className="flex items-center gap-1.5 mb-1">
+                        <div
+                            className="w-2 h-2 rounded-full flex-shrink-0"
+                            style={{ backgroundColor: `rgb(${zone.color.join(",")})` }}
+                        />
+                        <span className="text-[10px] text-secondary-text truncate">{zone.label}</span>
+                    </div>
+                    {/* Mini Bar Chart */}
+                    <div className="flex-1 min-h-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={buckets}
+                                margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+                            >
+                                <XAxis
+                                    dataKey="label"
+                                    stroke="#666"
+                                    fontSize={8}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    interval={0}
+                                />
+                                <YAxis
+                                    stroke="#666"
+                                    fontSize={8}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    width={20}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                                    contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '6px', fontSize: '10px' }}
+                                    itemStyle={{ color: '#fff' }}
+                                    formatter={((value: number | undefined) => [`${value ?? 0}`, 'Count']) as never}
+                                />
+                                <Bar dataKey="count" radius={[2, 2, 0, 0]} isAnimationActive={false}>
+                                    {buckets.map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            ))}
         </div>
     );
 }

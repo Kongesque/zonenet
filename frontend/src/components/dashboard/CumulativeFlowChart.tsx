@@ -13,6 +13,7 @@ import {
     ReferenceLine
 } from "recharts";
 import { Zone, LineCrossing, DetectionEvent } from "@/utils/types";
+import { ANALYTICS_COLORS, CHART_STYLES } from "@/utils/colors";
 
 interface CumulativeFlowChartProps {
     detectionData: DetectionEvent[];
@@ -109,17 +110,17 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         bottom: 5,
                     }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={ANALYTICS_COLORS.grid} vertical={false} />
                     <XAxis
                         dataKey="name"
-                        stroke="#666"
+                        stroke={ANALYTICS_COLORS.axis}
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
                         tick={{ dy: 5 }}
                     />
                     <YAxis
-                        stroke="#666"
+                        stroke={ANALYTICS_COLORS.axis}
                         fontSize={10}
                         tickLine={false}
                         axisLine={false}
@@ -135,7 +136,7 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         type="monotone"
                         dataKey="entries"
                         name="↓ Cumulative Entries"
-                        stroke="#22c55e"
+                        stroke={ANALYTICS_COLORS.positive}
                         strokeWidth={2}
                         dot={false}
                         isAnimationActive={false}
@@ -144,7 +145,7 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         type="monotone"
                         dataKey="exits"
                         name="↑ Cumulative Exits"
-                        stroke="#ef4444"
+                        stroke={ANALYTICS_COLORS.negative}
                         strokeWidth={2}
                         dot={false}
                         isAnimationActive={false}
@@ -153,17 +154,17 @@ export default function CumulativeFlowChart({ detectionData, lineCrossingData, z
                         type="monotone"
                         dataKey="net"
                         name="Net Flow"
-                        stroke="#60a5fa"
+                        stroke={ANALYTICS_COLORS.primary}
                         strokeWidth={2}
                         strokeDasharray="5 5"
                         dot={false}
                         isAnimationActive={false}
                     />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff' }}
-                        labelStyle={{ color: '#999', marginBottom: '4px' }}
-                        allowEscapeViewBox={{ x: true, y: true }}
+                        contentStyle={CHART_STYLES.tooltip}
+                        itemStyle={CHART_STYLES.tooltipItem}
+                        labelStyle={CHART_STYLES.tooltipLabel}
+                        allowEscapeViewBox={{ x: false, y: true }}
                         wrapperStyle={{ zIndex: 100 }}
                     />
                 </LineChart>

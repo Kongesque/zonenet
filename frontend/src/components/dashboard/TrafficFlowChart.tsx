@@ -96,6 +96,7 @@ export default function TrafficFlowChart({ lineCrossingData, zones }: TrafficFlo
                             return [absValue, name === 'in' ? '↓ Entries' : '↑ Exits'];
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                    // allowEscapeViewBox={{ x: false, y: true }}
                     />
                     <Legend
                         iconType="circle"

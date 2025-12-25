@@ -97,9 +97,9 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                         align="right"
                         wrapperStyle={{ fontSize: '10px', paddingBottom: '8px', top: 0, right: 0 }}
                     />
-                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
-                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
-                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="visitors" name="Visitors" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="peak" name="Peak" fill="#f97316" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#a855f7" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
                     <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                         contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
@@ -112,7 +112,7 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                             return [value, name];
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
-                        allowEscapeViewBox={{ x: true, y: true }}
+                        allowEscapeViewBox={{ x: false, y: true }}
                         wrapperStyle={{ zIndex: 100 }}
                     />
                 </BarChart>

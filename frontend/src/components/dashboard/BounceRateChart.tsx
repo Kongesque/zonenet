@@ -110,10 +110,6 @@ export default function BounceRateChart({ dwellData, zones, bounceThreshold = 5 
                     <Bar dataKey="bounceRate" name="Bounce" stackId="a" fill="#ef4444" radius={[0, 4, 4, 0]} barSize={16} isAnimationActive={false} />
                 </BarChart>
             </ResponsiveContainer>
-            {/* Bounce threshold indicator */}
-            <div className="flex justify-center mt-1 text-[10px] text-secondary-text">
-                Bounce = visits under {bounceThreshold}s
-            </div>
         </div>
     );
 }

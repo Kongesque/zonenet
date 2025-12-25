@@ -20,6 +20,7 @@ import TrafficFlowChart from "@/components/dashboard/TrafficFlowChart";
 import CumulativeFlowChart from "@/components/dashboard/CumulativeFlowChart";
 import BounceRateChart from "@/components/dashboard/BounceRateChart";
 import ClassBreakdownChart from "@/components/dashboard/ClassBreakdownChart";
+import ZoneDistributionChart from "@/components/dashboard/ZoneDistributionChart";
 
 export default function ResultPage() {
     const params = useParams();
@@ -109,6 +110,35 @@ export default function ResultPage() {
         }
     });
 
+    // Calculate zone-wise totals and Grand Total
+    const zoneCounts: Record<string, number> = {};
+    let grandTotal = 0;
+
+    if (job.zones) {
+        job.zones.forEach(zone => {
+            const label = zone.label || `Zone ${zone.id}`;
+            if (!zoneCounts[label]) zoneCounts[label] = 0;
+
+            const isLine = zone.points?.length === 2;
+            if (isLine) {
+                // For lines, use Total Activity (In + Out)
+                const lc = job.lineCrossingData?.[zone.id];
+                if (lc) {
+                    const totalCrossings = lc.in + lc.out;
+                    zoneCounts[label] += totalCrossings;
+                    grandTotal += totalCrossings;
+                }
+            } else {
+                // For zones, use Unique Visitors
+                const zoneDwells = job.dwellData?.filter(d => d.zone_id === zone.id);
+                if (zoneDwells) {
+                    zoneCounts[label] += zoneDwells.length;
+                    grandTotal += zoneDwells.length;
+                }
+            }
+        });
+    }
+
     return (
         <main className="h-full w-full overflow-auto bg-background text-text-color p-4">
             <div className="flex flex-col gap-4 min-h-full">
@@ -156,7 +186,7 @@ export default function ResultPage() {
                                     onClick={() => setIsHeatmapEnabled(!isHeatmapEnabled)}
                                     className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium transition-all ${isHeatmapEnabled
                                         ? "bg-orange-500/20 text-orange-500 border border-orange-500/30"
-                                        : "bg-card-bg text-secondary-text border border-white/10 hover:bg-card-bg-hover"
+                                        : "bg-btn-bg text-secondary-text border border-primary-border hover:bg-btn-hover"
                                         }`}
                                     title="Toggle Heatmap Overlay"
                                 >
@@ -214,14 +244,29 @@ export default function ResultPage() {
                                         {/* Divider */}
                                         <div className="border-t border-white/5 my-1" />
 
-                                        {/* Detection Stats */}
+                                        {/* Detection Stats Breakdown */}
                                         <div className="space-y-2">
-                                            <div className="flex justify-between">
-                                                <span className="text-secondary-text">Total Count</span>
-                                                <span className="font-mono text-text-color">
-                                                    {Object.values(zoneStats).reduce((acc, curr) => acc + curr.total, 0)}
-                                                </span>
+                                            <div className="space-y-1">
+                                                {Object.entries(zoneCounts).map(([label, count]) => (
+                                                    <div key={label} className="flex justify-between">
+                                                        <span className="text-secondary-text text-[10px] uppercase tracking-wider truncate max-w-[150px]" title={label}>{label}</span>
+                                                        <span className="font-mono text-text-color">{count}</span>
+                                                    </div>
+                                                ))}
+                                                {Object.keys(zoneCounts).length === 0 && (
+                                                    <div className="flex justify-between">
+                                                        <span className="text-secondary-text italic text-[10px]">No detections</span>
+                                                        <span className="font-mono text-text-color">0</span>
+                                                    </div>
+                                                )}
+
+                                                {/* Grand Total Row */}
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-secondary-text text-xs">Total Count</span>
+                                                    <span className="font-mono text-text-color">{grandTotal}</span>
+                                                </div>
                                             </div>
+                                            <div className="border-t border-white/5 my-1" />
                                             <div className="flex justify-between">
                                                 <span className="text-secondary-text">Peak Occupancy</span>
                                                 <span className="font-mono text-amber-400">
@@ -342,9 +387,9 @@ export default function ResultPage() {
                                     title="Dwell Segments"
                                     icon={<Timer className="w-3.5 h-3.5 text-amber-400" />}
                                     tooltip="Categorizes visits based on their duration."
-                                    contentClassName="h-[120px] overflow-hidden"
+                                    contentClassName="h-[140px]"
                                 >
-                                    <DwellDistributionChart data={job.dwellData} />
+                                    <DwellDistributionChart data={job.dwellData} zones={job.zones} />
                                 </DashboardCard>
 
                                 {/* Bounce Rate */}
@@ -352,9 +397,22 @@ export default function ResultPage() {
                                     title="Bounce Rate"
                                     icon={<MousePointerClick className="w-3.5 h-3.5 text-red-400" />}
                                     tooltip="Percentage of visits shorter than 1 second (fleeting detections)."
-                                    contentClassName="h-[200px] overflow-hidden"
+                                    contentClassName="h-[200px]"
                                 >
                                     <BounceRateChart
+                                        dwellData={job.dwellData}
+                                        zones={job.zones}
+                                    />
+                                </DashboardCard>
+
+                                {/* Zone Distribution */}
+                                <DashboardCard
+                                    title="Zone Distribution"
+                                    icon={<PieChart className="w-3.5 h-3.5 text-cyan-400" />}
+                                    tooltip="Proportion of visitors distributed across zones."
+                                    contentClassName="h-[180px]"
+                                >
+                                    <ZoneDistributionChart
                                         dwellData={job.dwellData}
                                         zones={job.zones}
                                     />
@@ -365,7 +423,7 @@ export default function ResultPage() {
                                     title="Class Distribution"
                                     icon={<PieChart className="w-3.5 h-3.5 text-pink-400" />}
                                     tooltip="Proportion of different object classes detected."
-                                    contentClassName="h-[180px] overflow-hidden"
+                                    contentClassName="h-[180px]"
                                 >
                                     <ClassBreakdownChart zones={job.zones} />
                                 </DashboardCard>
@@ -411,7 +469,7 @@ export default function ResultPage() {
                                             <Sparkline
                                                 data={job.detectionData}
                                                 zoneId={zone.id}
-                                                color={zone.color}
+                                                classId={zone.classId}
                                                 duration={job.processTime || 10}
                                             />
                                         </div>
@@ -495,7 +553,7 @@ export default function ResultPage() {
                 </div>
 
 
-            </div>
-        </main>
+            </div >
+        </main >
     );
 }

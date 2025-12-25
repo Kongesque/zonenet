@@ -3,15 +3,16 @@
 import { useMemo } from "react";
 import { AreaChart, Area, ResponsiveContainer } from "recharts";
 import { DetectionEvent } from "@/utils/types";
+import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors";
 
 interface SparklineProps {
     data: DetectionEvent[];
     zoneId: string;
-    color: number[];
+    classId: number;
     duration: number;
 }
 
-export default function Sparkline({ data, zoneId, color, duration }: SparklineProps) {
+export default function Sparkline({ data, zoneId, classId, duration }: SparklineProps) {
     const chartData = useMemo(() => {
         if (!data || data.length === 0) return [];
 
@@ -45,7 +46,8 @@ export default function Sparkline({ data, zoneId, color, duration }: SparklinePr
 
     if (chartData.length === 0) return null;
 
-    const rgb = `rgb(${color.join(",")})`;
+    // Use CLASS_COLORS based on classId
+    const zoneColor = CLASS_COLORS[classId] || DEFAULT_COLOR;
 
     return (
         <div className="h-8 w-full opacity-50">
@@ -53,14 +55,14 @@ export default function Sparkline({ data, zoneId, color, duration }: SparklinePr
                 <AreaChart data={chartData}>
                     <defs>
                         <linearGradient id={`spark-${zoneId}`} x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor={rgb} stopOpacity={0.5} />
-                            <stop offset="95%" stopColor={rgb} stopOpacity={0} />
+                            <stop offset="5%" stopColor={zoneColor} stopOpacity={0.5} />
+                            <stop offset="95%" stopColor={zoneColor} stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <Area
                         type="monotone"
                         dataKey="val"
-                        stroke={rgb}
+                        stroke={zoneColor}
                         strokeWidth={1}
                         fill={`url(#spark-${zoneId})`}
                         isAnimationActive={false}

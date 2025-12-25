@@ -11,19 +11,11 @@ import {
     ResponsiveContainer,
     Legend
 } from "recharts";
+import { DetectionEvent, Zone } from "@/utils/types";
+import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors";
 
-interface DetectionEvent {
-    time: number;
-    zone_id: string;
-    count: number;
-    // other fields...
-}
-
-interface Zone {
-    id: string;
-    label: string;
-    color: number[]; // [r, g, b]
-}
+// Helper to get zone color from classId
+const getZoneColor = (zone: Zone) => CLASS_COLORS[zone.classId] || DEFAULT_COLOR;
 
 interface ActivityTimelineProps {
     data: DetectionEvent[];
@@ -123,7 +115,7 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                     data={chartData}
                     margin={{
                         top: 5,
-                        right: 0,
+                        right: 10,
                         left: 0,
                         bottom: 5,
                     }}
@@ -131,8 +123,8 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                     <defs>
                         {zones.map((zone) => (
                             <linearGradient key={zone.id} id={`color${zone.id}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor={`rgb(${zone.color?.join(",")})`} stopOpacity={0.4} />
-                                <stop offset="95%" stopColor={`rgb(${zone.color?.join(",")})`} stopOpacity={0} />
+                                <stop offset="5%" stopColor={getZoneColor(zone)} stopOpacity={0.4} />
+                                <stop offset="95%" stopColor={getZoneColor(zone)} stopOpacity={0} />
                             </linearGradient>
                         ))}
                     </defs>
@@ -164,7 +156,7 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                             key={zone.id}
                             type="monotone"
                             dataKey={zone.id}
-                            stroke={`rgb(${zone.color?.join(",")})`}
+                            stroke={getZoneColor(zone)}
                             strokeWidth={2}
                             fillOpacity={1}
                             fill={`url(#color${zone.id})`}
@@ -177,7 +169,7 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                         contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
                         itemStyle={{ color: '#fff' }}
                         labelStyle={{ color: '#999', marginBottom: '4px' }}
-                        allowEscapeViewBox={{ x: true, y: true }}
+                        allowEscapeViewBox={{ x: false, y: true }}
                         wrapperStyle={{ zIndex: 100 }}
                     />
                 </AreaChart>
