@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
 import { LoadingOverlay } from "@/components/layout";
-import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame, Info, TrendingUp, Layers, Timer, ArrowLeftRight, PieChart, MousePointerClick } from "lucide-react";
+import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame, Info, TrendingUp, Layers, Timer, ArrowLeftRight, PieChart, MousePointerClick, Monitor, Cpu, Calendar, Play } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
 import DashboardCard from "@/components/dashboard/DashboardCard";
 import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
@@ -200,112 +200,116 @@ export default function ResultPage() {
                                 <div className="bg-card-bg rounded-md p-3">
                                     <div className="flex items-center gap-2 mb-3">
                                         <Info className="w-3.5 h-3.5 text-blue-400" />
-                                        <span className="text-xs font-medium text-text-color/90">Video Info</span>
+                                        <span className="text-xs font-semibold text-text-color tracking-tight uppercase">Video Environment</span>
                                     </div>
-                                    <div className="space-y-2 text-xs">
-                                        {/* Video Properties */}
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Resolution</span>
-                                            <span className="font-mono text-text-color">{job.frameWidth} × {job.frameHeight}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Process Time</span>
-                                            <span className="font-mono text-text-color">
-                                                {job.processTime && job.processTime >= 60
-                                                    ? `${Math.floor(job.processTime / 60)}m ${(job.processTime % 60).toFixed(0)}s`
-                                                    : `${job.processTime?.toFixed(1)}s`}
-                                            </span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Source</span>
-                                            <span className={`font-medium ${job.sourceType === 'rtsp' ? 'text-purple-400' :
-                                                job.sourceType === 'webcam' ? 'text-green-400' :
-                                                    'text-text-color'
-                                                }`}>
-                                                {job.sourceType === 'rtsp' ? 'RTSP Stream' :
-                                                    job.sourceType === 'webcam' ? 'Webcam' :
-                                                        'Video File'}
-                                            </span>
-                                        </div>
 
-                                        {/* Divider */}
-                                        <div className="border-t border-white/5 my-1" />
-
-                                        {/* Model Configuration */}
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Model</span>
-                                            <span className="text-blue-400">{job.model?.replace('.pt', '') || "YOLOv8"}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Confidence</span>
-                                            <span className="font-mono text-text-color">{(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%</span>
-                                        </div>
-
-                                        {/* Divider */}
-                                        <div className="border-t border-white/5 my-1" />
-
-                                        {/* Detection Stats Breakdown */}
+                                    <div className="grid grid-cols-1 gap-4">
+                                        {/* Group 1: Source & Metadata */}
                                         <div className="space-y-2">
-                                            <div className="space-y-1">
-                                                {Object.entries(zoneCounts).map(([label, count]) => (
-                                                    <div key={label} className="flex justify-between">
-                                                        <span className="text-secondary-text text-[10px] uppercase tracking-wider truncate max-w-[150px]" title={label}>{label}</span>
-                                                        <span className="font-mono text-text-color">{count}</span>
-                                                    </div>
-                                                ))}
-                                                {Object.keys(zoneCounts).length === 0 && (
-                                                    <div className="flex justify-between">
-                                                        <span className="text-secondary-text italic text-[10px]">No detections</span>
-                                                        <span className="font-mono text-text-color">0</span>
-                                                    </div>
-                                                )}
-
-                                                {/* Grand Total Row */}
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-secondary-text text-xs">Total Count</span>
-                                                    <span className="font-mono text-text-color">{grandTotal}</span>
+                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                <Monitor className="w-3 h-3 text-secondary-text" />
+                                                <span className="text-[10px] font-bold text-secondary-text uppercase tracking-widest">Metadata</span>
+                                            </div>
+                                            <div className="space-y-1.5 text-xs">
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Duration</span>
+                                                    <span className="font-mono text-text-color">
+                                                        {(() => {
+                                                            const duration = Math.max(...(job.detectionData?.map(d => d.time) || [0]), 0);
+                                                            return duration >= 60
+                                                                ? `${Math.floor(duration / 60)}m ${(duration % 60).toFixed(0)}s`
+                                                                : `${duration.toFixed(1)}s`;
+                                                        })()}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Resolution</span>
+                                                    <span className="font-mono text-text-color">{job.frameWidth} × {job.frameHeight}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Source</span>
+                                                    <span className={`px-1.5 py-0.5 rounded-sm text-[10px] font-medium leading-none ${job.sourceType === 'rtsp' ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20' :
+                                                        job.sourceType === 'webcam' ? 'bg-green-500/10 text-green-400 border border-green-500/20' :
+                                                            'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                                                        }`}>
+                                                        {job.sourceType === 'rtsp' ? 'RTSP STREAM' :
+                                                            job.sourceType === 'webcam' ? 'WEBCAM' :
+                                                                'LOCAL FILE'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Engine</span>
+                                                    <span className="px-1.5 py-0.5 rounded-sm bg-btn-bg text-secondary-text text-[10px] font-mono border border-primary-border uppercase">
+                                                        {job.model?.replace('.pt', '') || "YOLOv8"}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Confidence</span>
+                                                    <span className="font-mono text-text-color">
+                                                        {(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div className="border-t border-white/5 my-1" />
-                                            <div className="flex justify-between">
-                                                <span className="text-secondary-text">Peak Occupancy</span>
-                                                <span className="font-mono text-amber-400">
-                                                    {Math.max(...Object.values(zoneStats).map(s => s.peak), 0)}
-                                                </span>
+                                        </div>
+
+                                        {/* Group 2: Activity Summary */}
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-1.5 mb-1.5">
+                                                <Activity className="w-3 h-3 text-secondary-text" />
+                                                <span className="text-[10px] font-bold text-secondary-text uppercase tracking-widest">Activity Summary</span>
                                             </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-secondary-text">Avg Dwell</span>
-                                                <span className="font-mono text-text-color">
-                                                    {(() => {
-                                                        const allDwell = job.dwellData || [];
-                                                        if (allDwell.length === 0) return "—";
-                                                        const avgDwell = allDwell.reduce((acc, d) => acc + d.duration, 0) / allDwell.length;
-                                                        return `${avgDwell.toFixed(1)}s`;
-                                                    })()}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-secondary-text">Active Zones</span>
-                                                <span className="font-mono text-text-color">
-                                                    {job.zones?.length || 0}
-                                                </span>
+                                            <div className="space-y-1.5 text-xs">
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Total Events</span>
+                                                    <span className="font-mono text-text-color font-bold">{grandTotal}</span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Peak Occupancy</span>
+                                                    <span className="font-mono text-amber-400 font-bold">
+                                                        {Math.max(...Object.values(zoneStats).map(s => s.peak), 0)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Avg Dwell</span>
+                                                    <span className="font-mono text-text-color">
+                                                        {(() => {
+                                                            const allDwell = job.dwellData || [];
+                                                            if (allDwell.length === 0) return "—";
+                                                            const avgDwell = allDwell.reduce((acc, d) => acc + d.duration, 0) / allDwell.length;
+                                                            return `${avgDwell.toFixed(1)}s`;
+                                                        })()}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center h-4">
+                                                    <span className="text-secondary-text">Active Zones</span>
+                                                    <span className="font-mono text-text-color">
+                                                        {job.zones?.length || 0}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Divider */}
-                                        <div className="border-t border-white/5 my-1" />
-
-                                        {/* Timestamp */}
-                                        <div className="flex justify-between">
-                                            <span className="text-secondary-text">Processed</span>
-                                            <span className="text-secondary-text/80 text-[10px]">
-                                                {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    hour: '2-digit',
-                                                    minute: '2-digit'
-                                                }) : '—'}
-                                            </span>
+                                        {/* Footer Metadata */}
+                                        <div className="pt-2 border-t border-white/5 space-y-1.5">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] text-secondary-text flex items-center gap-1"><Clock className="w-2.5 h-2.5" /> Runtime</span>
+                                                <span className="text-[10px] font-mono text-secondary-text italic">
+                                                    {job.processTime && job.processTime >= 60
+                                                        ? `${Math.floor(job.processTime / 60)}m ${(job.processTime % 60).toFixed(0)}s`
+                                                        : `${job.processTime?.toFixed(1)}s`}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-[10px] text-secondary-text flex items-center gap-1"><Calendar className="w-2.5 h-2.5" /> Processed On</span>
+                                                <span className="text-[10px] text-secondary-text/80">
+                                                    {job.createdAt ? new Date(job.createdAt).toLocaleDateString('en-US', {
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    }) : '—'}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
