@@ -152,11 +152,6 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                         axisLine={false}
                         mirror={true}
                     />
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff' }}
-                        labelStyle={{ color: '#999', marginBottom: '4px' }}
-                    />
                     <Legend
                         iconType="circle"
                         verticalAlign="top"
@@ -178,6 +173,13 @@ export default function ActivityTimeline({ data, zones, duration }: ActivityTime
                             isAnimationActive={false}
                         />
                     ))}
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff' }}
+                        labelStyle={{ color: '#999', marginBottom: '4px' }}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        wrapperStyle={{ zIndex: 100 }}
+                    />
                 </AreaChart>
             </ResponsiveContainer>
         </div>

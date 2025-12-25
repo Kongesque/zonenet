@@ -110,11 +110,6 @@ export default function OccupancyStackedChart({ data, zones, duration }: Occupan
                         axisLine={false}
                         label={{ value: 'Count', angle: -90, position: 'insideLeft', fontSize: 10, fill: '#666' }}
                     />
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
-                        itemStyle={{ color: '#fff' }}
-                        labelStyle={{ color: '#999', marginBottom: '4px' }}
-                    />
                     <Legend
                         iconType="circle"
                         verticalAlign="top"
@@ -135,6 +130,13 @@ export default function OccupancyStackedChart({ data, zones, duration }: Occupan
                             isAnimationActive={false}
                         />
                     ))}
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
+                        itemStyle={{ color: '#fff' }}
+                        labelStyle={{ color: '#999', marginBottom: '4px' }}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        wrapperStyle={{ zIndex: 100 }}
+                    />
                 </AreaChart>
             </ResponsiveContainer>
         </div>

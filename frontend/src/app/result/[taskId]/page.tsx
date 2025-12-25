@@ -270,7 +270,7 @@ export default function ResultPage() {
                                     title="Activity Timeline"
                                     icon={<Activity className="w-3.5 h-3.5 text-blue-400" />}
                                     tooltip="Visualizes detection frequency over the video duration."
-                                    contentClassName="h-[100px] overflow-hidden"
+                                    contentClassName="h-[100px]"
                                 >
                                     <ActivityTimeline
                                         data={job.detectionData}
@@ -284,7 +284,7 @@ export default function ResultPage() {
                                     title="Zone Overview"
                                     icon={<BarChart3 className="w-3.5 h-3.5 text-blue-400" />}
                                     tooltip="Compare total visitors, peak occupancy, and average dwell time across zones."
-                                    contentClassName="h-[150px] overflow-hidden"
+                                    contentClassName="h-[150px]"
                                 >
                                     <ZoneComparisonChart
                                         detectionData={job.detectionData}
@@ -298,7 +298,7 @@ export default function ResultPage() {
                                     title="Net Flow Over Time"
                                     icon={<TrendingUp className="w-3.5 h-3.5 text-green-400" />}
                                     tooltip="Tracks the cumulative difference between entries and exits over time."
-                                    contentClassName="h-[120px] overflow-hidden"
+                                    contentClassName="h-[120px]"
                                 >
                                     <CumulativeFlowChart
                                         detectionData={job.detectionData}
@@ -326,7 +326,7 @@ export default function ResultPage() {
                                     title="Zone Loads"
                                     icon={<Layers className="w-3.5 h-3.5 text-indigo-400" />}
                                     tooltip="Shows how occupancy is distributed across zones at any given time."
-                                    contentClassName="h-[120px] overflow-hidden"
+                                    contentClassName="h-[120px]"
                                 >
                                     <OccupancyStackedChart
                                         data={job.detectionData}

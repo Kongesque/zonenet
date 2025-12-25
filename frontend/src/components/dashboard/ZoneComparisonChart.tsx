@@ -91,6 +91,15 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                         tickLine={false}
                         axisLine={false}
                     />
+                    <Legend
+                        iconType="circle"
+                        verticalAlign="top"
+                        align="right"
+                        wrapperStyle={{ fontSize: '10px', paddingBottom: '8px', top: 0, right: 0 }}
+                    />
+                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
+                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
                     <Tooltip
                         cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                         contentStyle={{ backgroundColor: '#111', borderColor: '#333', borderRadius: '8px', fontSize: '12px' }}
@@ -103,16 +112,9 @@ export default function ZoneComparisonChart({ detectionData, dwellData, zones }:
                             return [value, name];
                         }) as never}
                         labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                        allowEscapeViewBox={{ x: true, y: true }}
+                        wrapperStyle={{ zIndex: 100 }}
                     />
-                    <Legend
-                        iconType="circle"
-                        verticalAlign="top"
-                        align="right"
-                        wrapperStyle={{ fontSize: '10px', paddingBottom: '8px', top: 0, right: 0 }}
-                    />
-                    <Bar dataKey="visitors" name="Visitors" fill="#2dd4bf" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
-                    <Bar dataKey="peak" name="Peak" fill="#f43f5e" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
-                    <Bar dataKey="avgDwell" name="Dwell (s)" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={16} isAnimationActive={false} />
                 </BarChart>
             </ResponsiveContainer>
         </div>
