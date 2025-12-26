@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 
-from app.api.routes import jobs, camera, system
+from app.api.routes import jobs, camera, system, ws
 from app.services.db import init_db
 
 # Initialize database
@@ -45,6 +45,7 @@ app.mount("/media", StaticFiles(directory="uploads"), name="media")
 app.include_router(jobs.router, prefix="/api/jobs", tags=["jobs"])
 app.include_router(camera.router, prefix="/api", tags=["camera"])
 app.include_router(system.router, prefix="/api", tags=["system"])
+app.include_router(ws.router, tags=["websocket"])
 
 
 @app.get("/health")

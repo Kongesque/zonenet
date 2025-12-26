@@ -155,7 +155,13 @@ export default function ZonePage() {
         const completeZones = zones.filter((z) => z.points.length >= 2);
         if (completeZones.length === 0) return;
 
-        setIsProcessing(true);
+        // Check if this is a live stream (RTSP/webcam)
+        const isLiveStream = job?.sourceType === "rtsp" || job?.sourceType === "webcam";
+
+        // Only show loader for file uploads, not for live streams
+        if (!isLiveStream) {
+            setIsProcessing(true);
+        }
 
         try {
             const response = await api.processJob(taskId, {
@@ -165,13 +171,13 @@ export default function ZonePage() {
                 trackerConfig,
             });
 
-            // For live streams, redirect immediately (no loader)
-            if (response.redirect) {
+            // For live streams only: redirect immediately to /live page (no loader)
+            if (isLiveStream && response.redirect) {
                 router.push(response.redirect);
                 return;
             }
 
-            // For video files, poll for progress
+            // For file uploads: poll for progress, then redirect to /result
             const pollProgress = async () => {
                 try {
                     const data = await api.getProgress(taskId);
@@ -195,7 +201,7 @@ export default function ZonePage() {
             console.error("Failed to start processing:", error);
             setIsProcessing(false);
         }
-    }, [zones, confidence, model, trackerConfig, taskId, router]);
+    }, [zones, confidence, model, trackerConfig, taskId, router, job?.sourceType]);
 
     if (isLoading) {
         return <LoadingOverlay message="Loading..." />;
