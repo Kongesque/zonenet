@@ -8,30 +8,52 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
-import { Zone } from "@/utils/types";
+import { Zone, DetectionEvent } from "@/utils/types";
 import { COCO_CLASSES } from "@/utils/types";
 import { CLASS_COLORS, DEFAULT_COLOR } from "@/utils/colors"; // Use shared colors
 
 interface ClassBreakdownChartProps {
     zones: Zone[];
+    detectionData?: DetectionEvent[];
 }
 
-export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps) {
+export default function ClassBreakdownChart({ zones, detectionData }: ClassBreakdownChartProps) {
     const chartData = useMemo(() => {
         if (!zones || zones.length === 0) return [];
 
-        // Count zones by class ID (support multi-class per zone)
         const classCounts: Record<number, number> = {};
 
-        zones.forEach(zone => {
-            // Count each class in the zone's classIds array
-            zone.classIds.forEach(classId => {
-                if (!classCounts[classId]) {
-                    classCounts[classId] = 0;
+        // If we have actual detection data, use it
+        if (detectionData && detectionData.length > 0) {
+            // Calculate totals from the last event for each zone
+            zones.forEach(zone => {
+                const zoneEvents = detectionData.filter(e => e.zone_id === zone.id);
+                const lastEvent = zoneEvents[zoneEvents.length - 1];
+
+                if (lastEvent?.class_counts) {
+                    Object.entries(lastEvent.class_counts).forEach(([clsId, count]) => {
+                        const id = parseInt(clsId);
+                        classCounts[id] = (classCounts[id] || 0) + (count as number);
+                    });
+                } else if (lastEvent?.count) {
+                    // Fallback for old data or single class: assume all correspond to first configured class
+                    const mainClassId = zone.classIds[0];
+                    classCounts[mainClassId] = (classCounts[mainClassId] || 0) + lastEvent.count;
                 }
-                classCounts[classId]++;
             });
-        });
+        }
+
+        // If no data found (or empty), check if we want to show "Targeted Classes" instead (fallback)
+        // But usually for "Results", showing 0 is better than showing config if we have processed data.
+        // Let's fallback only if detectionData is undefined (not just empty filtered result)
+        if (Object.keys(classCounts).length === 0 && (!detectionData || detectionData.length === 0)) {
+            // Fallback: Count zones by class ID (support multi-class per zone) - what we had before
+            zones.forEach(zone => {
+                zone.classIds.forEach(classId => {
+                    classCounts[classId] = (classCounts[classId] || 0) + 1;
+                });
+            });
+        }
 
         // Convert to chart data
         return Object.entries(classCounts).map(([classId, count]) => {
@@ -43,7 +65,7 @@ export default function ClassBreakdownChart({ zones }: ClassBreakdownChartProps)
                 color: CLASS_COLORS[id] || DEFAULT_COLOR
             };
         }).sort((a, b) => b.value - a.value);
-    }, [zones]);
+    }, [zones, detectionData]);
 
     if (!zones || zones.length === 0) {
         return (

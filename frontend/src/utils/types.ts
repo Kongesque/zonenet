@@ -50,6 +50,7 @@ export interface DetectionEvent {
   time: number;
   zone_id: string;
   class_id: number;
+  class_counts?: Record<number, number>;
   count: number;
   in_count?: number;
   out_count?: number;

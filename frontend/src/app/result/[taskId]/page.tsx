@@ -482,7 +482,7 @@ export default function ResultPage() {
                                     tooltip="Proportion of different object classes detected."
                                     contentClassName="h-[180px]"
                                 >
-                                    <ClassBreakdownChart zones={job.zones} />
+                                    <ClassBreakdownChart zones={job.zones} detectionData={job.detectionData} />
                                 </DashboardCard>
                             </div>
                         </BentoCard>
@@ -538,32 +538,70 @@ export default function ResultPage() {
                                         </div>
 
                                         {isLine && lineCrossing ? (
-                                            <div className="flex items-end justify-between">
-                                                <div>
-                                                    <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Net Flow</p>
-                                                    <div className={`text-lg font-bold leading-none ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-text-color'}`}>
-                                                        {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
+                                            <div className="space-y-2">
+                                                <div className="flex items-end justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Net Flow</p>
+                                                        <div className={`text-lg font-bold leading-none ${lineCrossing.in - lineCrossing.out > 0 ? 'text-green-400' : lineCrossing.in - lineCrossing.out < 0 ? 'text-red-400' : 'text-text-color'}`}>
+                                                            {lineCrossing.in - lineCrossing.out > 0 ? '+' : ''}{lineCrossing.in - lineCrossing.out}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right text-xs text-secondary-text">
+                                                        <span>In: <span className="text-green-400 font-medium">{lineCrossing.in}</span></span>
+                                                        <span className="ml-2">Out: <span className="text-red-400 font-medium">{lineCrossing.out}</span></span>
                                                     </div>
                                                 </div>
-                                                <div className="text-right text-xs text-secondary-text">
-                                                    <span>In: <span className="text-green-400 font-medium">{lineCrossing.in}</span></span>
-                                                    <span className="ml-2">Out: <span className="text-red-400 font-medium">{lineCrossing.out}</span></span>
-                                                </div>
+                                                {/* Line Crossing Per-Class breakdown (from last event) */}
+                                                {(() => {
+                                                    const zoneEvents = job.detectionData?.filter(e => e.zone_id === zone.id) || [];
+                                                    const lastEvent = zoneEvents[zoneEvents.length - 1];
+                                                    const classCounts = lastEvent?.class_counts;
+                                                    if (!classCounts || Object.keys(classCounts).length === 0) return null;
+
+                                                    return (
+                                                        <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-white/5">
+                                                            {Object.entries(classCounts).map(([clsId, count]) => (
+                                                                <span key={clsId} className="px-1 py-0.5 rounded-[2px] text-[8px] bg-blue-500/10 text-blue-400/80 border border-blue-500/10">
+                                                                    {count} {COCO_CLASSES[parseInt(clsId)]}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         ) : (
-                                            <div className="flex items-end justify-between">
-                                                <div>
-                                                    <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Visitors</p>
-                                                    <p className="text-2xl font-bold text-text-color leading-none">
-                                                        {stats.total}
-                                                    </p>
+                                            <div className="space-y-2">
+                                                <div className="flex items-end justify-between">
+                                                    <div>
+                                                        <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Visitors</p>
+                                                        <p className="text-2xl font-bold text-text-color leading-none">
+                                                            {stats.total}
+                                                        </p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Avg Time</p>
+                                                        <span className="text-sm font-medium text-amber-500/90">
+                                                            {avgDwell}s
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <p className="text-[10px] text-secondary-text uppercase tracking-wider mb-0.5">Avg Time</p>
-                                                    <span className="text-sm font-medium text-amber-500/90">
-                                                        {avgDwell}s
-                                                    </span>
-                                                </div>
+                                                {/* Zone Per-Class breakdown (from last event) */}
+                                                {(() => {
+                                                    const zoneEvents = job.detectionData?.filter(e => e.zone_id === zone.id) || [];
+                                                    const lastEvent = zoneEvents[zoneEvents.length - 1];
+                                                    const classCounts = lastEvent?.class_counts;
+                                                    if (!classCounts || Object.keys(classCounts).length === 0) return null;
+
+                                                    return (
+                                                        <div className="flex flex-wrap gap-1 mt-1 pt-1 border-t border-white/5">
+                                                            {Object.entries(classCounts).map(([clsId, count]) => (
+                                                                <span key={clsId} className="px-1 py-0.5 rounded-[2px] text-[8px] bg-green-500/10 text-green-400/80 border border-green-500/10">
+                                                                    {count} {COCO_CLASSES[parseInt(clsId)]}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         )}
                                     </div>
