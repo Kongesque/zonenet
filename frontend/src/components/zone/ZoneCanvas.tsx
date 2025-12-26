@@ -318,8 +318,14 @@ export function ZoneCanvas({
             ctx.stroke();
             ctx.setLineDash([]); // Reset
 
-            // Draw cursor follower vertex
-            drawVertex(targetPoint.x, targetPoint.y, color, true, true, false);
+            // Draw cursor follower vertex (smaller)
+            ctx.beginPath();
+            ctx.arc(targetPoint.x, targetPoint.y, 6, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+            ctx.stroke();
         }
     }, [zones, activeZoneId, scale, imageLoaded, mousePos, maxPoints, hoveredPoint, draggedPoint, hoveredZoneId, draggedZone]);
 
@@ -370,20 +376,13 @@ export function ZoneCanvas({
         // 2. Check if clicking inside a zone
         const zoneId = getZoneAt(x, y);
         if (zoneId) {
-            // If clicking on a different zone, SELECT it (new behavior)
+            // If clicking on a different zone, SELECT it
             if (activeZoneId !== zoneId) {
                 onZoneSelect(zoneId);
                 return;
             }
-            // If clicking on the already active zone, allow dragging
-            const zone = zones.find(z => z.id === zoneId);
-            if (zone) {
-                setDraggedZone({
-                    zoneId,
-                    offset: { x, y }
-                });
-            }
-            return;
+            // If clicking inside the ACTIVE zone, add a point there (not drag)
+            // This allows creating complex concave polygons
         }
 
         // 3. Clicking on empty area
@@ -504,9 +503,7 @@ export function ZoneCanvas({
     // Dynamic cursor
     const getCursor = () => {
         if (draggedPoint) return "grabbing";
-        if (draggedZone) return "move";
         if (hoveredPoint) return "grab";
-        if (hoveredZoneId) return "move";
         if (activeZoneId) return "crosshair";
         return "default";
     };

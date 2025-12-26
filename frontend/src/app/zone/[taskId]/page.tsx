@@ -109,18 +109,6 @@ export default function ZonePage() {
         );
     }, [maxPoints]);
 
-    const handleZoneAdd = useCallback(() => {
-        const newZone: Zone = {
-            id: generateZoneId(),
-            points: [],
-            classId: 0,
-            color: getColorFromClassId(0),
-            label: `Zone ${zones.length + 1}`,
-        };
-        setZones((prev) => [...prev, newZone]);
-        setActiveZoneId(newZone.id);
-    }, [zones.length]);
-
     // Auto-create a new zone with the first point already added (for click-to-create UX)
     // If firstPoint is {x: -1, y: -1}, create empty zone (used for closing current polygon)
     const handleAutoCreateZone = useCallback((firstPoint: Point) => {
@@ -280,7 +268,6 @@ export default function ZonePage() {
                     model={model}
                     trackerConfig={trackerConfig}
                     onZoneSelect={setActiveZoneId}
-                    onZoneAdd={handleZoneAdd}
                     onZoneDelete={handleZoneDelete}
                     onZoneClassChange={handleZoneClassChange}
                     onZoneLabelChange={handleZoneLabelChange}

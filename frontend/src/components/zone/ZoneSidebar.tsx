@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2, ChevronDown, Pencil } from "lucide-react";
+import { Trash2, ChevronDown, Pencil } from "lucide-react";
 import type { Zone } from "@/utils/types";
 import { COCO_CLASSES } from "@/utils/types";
 
@@ -16,7 +16,6 @@ interface ZoneSidebarProps {
         track_buffer: number;
     };
     onZoneSelect: (zoneId: string) => void;
-    onZoneAdd: () => void;
     onZoneDelete: (zoneId: string) => void;
     onZoneClassChange: (zoneId: string, classId: number) => void;
     onZoneLabelChange: (zoneId: string, label: string) => void;
@@ -52,7 +51,6 @@ export function ZoneSidebar({
     model,
     trackerConfig,
     onZoneSelect,
-    onZoneAdd,
     onZoneDelete,
     onZoneClassChange,
     onZoneLabelChange,
@@ -162,14 +160,7 @@ export function ZoneSidebar({
                     ))}
                 </div>
 
-                {/* Add Zone Button */}
-                <button
-                    onClick={onZoneAdd}
-                    className="w-full py-2 text-sm text-secondary-text border border-dashed border-btn-border rounded-lg hover:border-text-color hover:text-text-color transition-all cursor-pointer flex items-center justify-center gap-2 mb-4"
-                >
-                    <Plus className="w-4 h-4" />
-                    Add Zone
-                </button>
+
 
                 <div className="space-y-4">
                     {/* Confidence Slider */}
