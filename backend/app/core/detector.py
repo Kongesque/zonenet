@@ -330,9 +330,10 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                             # Only count if this is a new crossing (not same direction as last)
                             if last_direction != crossing_direction:
                                 crossed_objects_per_zone[zone_id][track_id] = {
-                                    'last_direction': crossing_direction,
+                                   'last_direction': crossing_direction,
                                     'timestamp': timestamp,
-                                    'counted': True
+                                    'counted': True,
+                                    'class_id': detected_class  # Store class
                                 }
                                 
                                 # Update IN/OUT counts
@@ -343,10 +344,18 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                                 
                                 # Log detection event with direction info
                                 lc = line_crossing_counts[zone_id]
+                                
+                                # Calculate per-class counts
+                                class_counts = {}
+                                for track_data in crossed_objects_per_zone[zone_id].values():
+                                    cls_id = track_data.get('class_id', -1)
+                                    class_counts[cls_id] = class_counts.get(cls_id, 0) + 1
+                                
                                 detection_events.append({
                                     "time": timestamp,
                                     "zone_id": zone_id,
                                     "class_id": zd['class_ids'][0],  # Use first class for event logging
+                                    "class_counts": class_counts,  # Per-class breakdown
                                     "count": lc['in'] + lc['out'],
                                     "in_count": lc['in'],
                                     "out_count": lc['out'],
@@ -373,13 +382,20 @@ def _run_detection(path_x, zones, frame_size, taskID, conf, model_name, tracker_
                         crossed_objects_per_zone[zone_id][track_id] = {
                             'in_zone': True,
                             'entry_time': timestamp,
-                            'counted': True
+                            'counted': True,
+                            'class_id': detected_class  # Store class for per-class counting
                         }
-                        # Log detection event
+                        # Log detection event with per-class breakdown
+                        class_counts = {}
+                        for track_data in crossed_objects_per_zone[zone_id].values():
+                            cls_id = track_data.get('class_id', -1)
+                            class_counts[cls_id] = class_counts.get(cls_id, 0) + 1
+                        
                         detection_events.append({
                             "time": timestamp,
                             "zone_id": zone_id,
                             "class_id": zd['class_ids'][0],  # Use first class for event logging
+                            "class_counts": class_counts,  # Per-class breakdown
                             "count": len(crossed_objects_per_zone[zone_id])
                         })
                     elif not crossed_objects_per_zone[zone_id][track_id].get('in_zone', False):

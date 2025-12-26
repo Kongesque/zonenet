@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/utils/api";
+import { COCO_CLASSES } from "@/utils/types";
 import { LoadingOverlay } from "@/components/layout";
 import { Download, FileJson, Table, Clock, Users, Activity, BarChart3, Flame, Info, TrendingUp, Layers, Timer, ArrowLeftRight, PieChart, MousePointerClick, Monitor, Cpu, Calendar, Play } from "lucide-react";
 import { BentoGrid, BentoCard } from "@/components/dashboard/BentoGrid";
@@ -139,6 +140,17 @@ export default function ResultPage() {
         });
     }
 
+    // Calculate per-class totals from latest detection events
+    const perClassTotals: Record<number, number> = {};
+    job.detectionData?.forEach((event: any) => {
+        if (event.class_counts) {
+            Object.entries(event.class_counts).forEach(([classId, count]) => {
+                const cls = parseInt(classId);
+                perClassTotals[cls] = Math.max(perClassTotals[cls] || 0, count as number);
+            });
+        }
+    });
+
     return (
         <main className="h-full w-full overflow-auto bg-background text-text-color p-4">
             <div className="flex flex-col gap-4 min-h-full">
@@ -249,6 +261,28 @@ export default function ResultPage() {
                                                         {(job.confidence > 1 ? job.confidence : job.confidence * 100).toFixed(0)}%
                                                     </span>
                                                 </div>
+                                                <div className="flex justify-between items-start h-auto min-h-4 py-0.5">
+                                                    <span className="text-secondary-text">Target Classes</span>
+                                                    <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                                                        {(() => {
+                                                            // Get unique class IDs from all zones
+                                                            const uniqueClassIds = new Set<number>();
+                                                            job.zones?.forEach(zone => {
+                                                                zone.classIds?.forEach(classId => uniqueClassIds.add(classId));
+                                                            });
+                                                            const sortedClassIds = Array.from(uniqueClassIds).sort((a, b) => a - b);
+
+                                                            return sortedClassIds.map(classId => (
+                                                                <span
+                                                                    key={classId}
+                                                                    className="px-1.5 py-0.5 rounded-sm text-[9px] font-medium leading-none bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                                                >
+                                                                    {COCO_CLASSES[classId] || `Class ${classId}`}
+                                                                </span>
+                                                            ));
+                                                        })()}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -286,6 +320,25 @@ export default function ResultPage() {
                                                         {job.zones?.length || 0}
                                                     </span>
                                                 </div>
+                                                {/* Per-Class Breakdown */}
+                                                {Object.keys(perClassTotals).length > 0 && (
+                                                    <div className="flex justify-between items-start h-auto min-h-4 py-0.5">
+                                                        <span className="text-secondary-text">Class Breakdown</span>
+                                                        <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                                                            {Object.entries(perClassTotals)
+                                                                .sort((a, b) => parseInt(a[0]) - parseInt(b[0]))
+                                                                .map(([classId, count]) => (
+                                                                    <span
+                                                                        key={classId}
+                                                                        className="px-1.5 py-0.5 rounded-sm text-[9px] font-medium leading-none bg-green-500/10 text-green-400 border border-green-500/20"
+                                                                        title={`${COCO_CLASSES[parseInt(classId)]}: ${count} detected`}
+                                                                    >
+                                                                        {count} {COCO_CLASSES[parseInt(classId)] || `Class ${classId}`}
+                                                                    </span>
+                                                                ))}
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
 

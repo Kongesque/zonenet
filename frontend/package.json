@@ -4,7 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:mock": "NEXT_PUBLIC_API_URL=http://localhost:3000 npm run dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

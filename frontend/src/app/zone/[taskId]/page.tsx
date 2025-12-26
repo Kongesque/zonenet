@@ -93,6 +93,11 @@ export default function ZonePage() {
         if (job.confidence) setConfidence(job.confidence);
         if (job.model) setModel(job.model);
         if (job.trackerConfig) setTrackerConfig(job.trackerConfig);
+
+        // Initialize frame size from job data (important for frame-wide mode)
+        if (job.frameWidth && job.frameHeight) {
+            setFrameSize({ width: job.frameWidth, height: job.frameHeight });
+        }
     }, [job]);
 
     const handleFrameLoaded = useCallback((width: number, height: number) => {
@@ -159,13 +164,17 @@ export default function ZonePage() {
 
         if (detectionMode === 'frame') {
             // Frame-wide mode: Create synthetic zone covering entire frame
+            // Use job dimensions directly to ensure correct size
+            const width = job?.frameWidth || frameSize.width || 1920;
+            const height = job?.frameHeight || frameSize.height || 1080;
+
             const syntheticZone: Zone = {
                 id: 'global',
                 points: [
                     { x: 0, y: 0 },
-                    { x: frameSize.width, y: 0 },
-                    { x: frameSize.width, y: frameSize.height },
-                    { x: 0, y: frameSize.height }
+                    { x: width, y: 0 },
+                    { x: width, y: height },
+                    { x: 0, y: height }
                 ],
                 classIds: frameClassIds,
                 color: getColorFromClassId(frameClassIds[0]),
