@@ -76,6 +76,13 @@ class ApiClient {
     }
 
     /**
+     * Clear all jobs and their associated files
+     */
+    async clearAllJobs(): Promise<{ success: boolean; deleted_count: number }> {
+        return this.request("/api/jobs/all", { method: "DELETE" });
+    }
+
+    /**
      * Rename a job
      */
     async renameJob(taskId: string, name: string): Promise<void> {

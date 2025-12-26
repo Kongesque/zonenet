@@ -159,6 +159,13 @@ def delete_job(task_id):
     conn.commit()
     conn.close()
 
+def clear_all_jobs():
+    """Delete all jobs from the database."""
+    conn = get_db()
+    conn.execute('DELETE FROM jobs')
+    conn.commit()
+    conn.close()
+
 def update_job(task_id, **kwargs):
     conn = get_db()
     

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
-import { Sun, Moon } from "lucide-react";
+import { Sun, Moon, Trash2 } from "lucide-react";
 import { api } from "@/utils/api";
 
 interface HeaderProps {
@@ -17,6 +17,7 @@ export function Header({ children }: HeaderProps) {
         available: boolean;
         name: string;
     } | null>(null);
+    const [isClearing, setIsClearing] = useState(false);
 
     useEffect(() => {
         setTimeout(() => setMounted(true), 0);
@@ -34,6 +35,27 @@ export function Header({ children }: HeaderProps) {
 
     const toggleTheme = () => {
         setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    };
+
+    const handleClearCache = async () => {
+        if (!confirm("Are you sure you want to clear all cached data? This will delete all jobs, videos, and results.")) {
+            return;
+        }
+
+        setIsClearing(true);
+        try {
+            const result = await api.clearAllJobs();
+            if (result.success) {
+                alert(`Successfully cleared ${result.deleted_count} job(s)`);
+                // Refresh the page to update any job lists
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error("Failed to clear cache:", error);
+            alert("Failed to clear cache. Please try again.");
+        } finally {
+            setIsClearing(false);
+        }
     };
 
     // Avoid hydration mismatch - don't render theme button until mounted
@@ -80,6 +102,18 @@ export function Header({ children }: HeaderProps) {
                     >
                         {gpuInfo.available ? "GPU" : "CPU"}
                     </div>
+                )}
+
+                {/* Clear Cache Button */}
+                {mounted && (
+                    <button
+                        onClick={handleClearCache}
+                        disabled={isClearing}
+                        className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-btn-hover transition-colors text-text-color cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Clear Cache"
+                    >
+                        <Trash2 className={`w-5 h-5 ${isClearing ? "animate-pulse" : ""}`} />
+                    </button>
                 )}
 
                 {/* Theme Toggle */}

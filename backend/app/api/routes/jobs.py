@@ -8,7 +8,7 @@ import csv
 import io
 
 from app.models import ProcessRequest, UpdateZonesRequest, RenameRequest
-from app.services.db import get_job, update_job, get_all_jobs, delete_job
+from app.services.db import get_job, update_job, get_all_jobs, delete_job, clear_all_jobs
 from app.services.file_handler import handle_upload_file, safe_remove_file
 from app.services.processor import run_processing_pipeline
 
@@ -30,6 +30,26 @@ async def list_jobs(status: str | None = None):
     """Get all jobs, optionally filtered by status."""
     jobs = get_all_jobs(status=status)
     return jobs
+
+
+@router.delete("/all")
+async def clear_all_jobs_endpoint():
+    """Delete all jobs and all associated files."""
+    # Get all jobs first to clean up files
+    jobs = get_all_jobs()
+    
+    for job in jobs:
+        # Clean up associated files
+        safe_remove_file(job.get("video_path"))
+        safe_remove_file(job.get("frame_path"))
+        task_id = job.get("id")
+        if task_id:
+            output_path = os.path.join("uploads/outputs", f"output_{task_id}.mp4")
+            safe_remove_file(output_path)
+    
+    # Clear database
+    clear_all_jobs()
+    return {"success": True, "deleted_count": len(jobs)}
 
 
 @router.get("/{task_id}")
