@@ -337,7 +337,10 @@ def _run_live_detection(stream_url, zones, frame_size, task_id, conf,
             text_position = (int(width * 0.02), y_offset + int(idx * height * 0.05))
             cv2.putText(frame, count_text, text_position, font, font_scale, text_color, font_thickness)
         
-        # Update global state with history and peaks
+        # Update global state with history and peaks (safely)
+        if task_id not in _active_streams:
+            break  # Stream was stopped, exit loop
+            
         stream_state = _active_streams[task_id]
         stream_state['counts'] = counts
         

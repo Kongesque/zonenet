@@ -19,6 +19,7 @@ export default function LivePage() {
     >("connecting");
     const wsRef = useRef<WebSocket | null>(null);
     const [frame, setFrame] = useState<string | null>(null);
+    const [isStreamReady, setIsStreamReady] = useState(false);
     const retryCountRef = useRef(0);
     const maxRetries = 3;
 
@@ -46,6 +47,7 @@ export default function LivePage() {
                     const data = JSON.parse(event.data);
                     if (data.type === "frame") {
                         setFrame(`data:image/jpeg;base64,${data.frame}`);
+                        setIsStreamReady(true);
                     }
                     if (data.counts) {
                         setCounts(data.counts);
@@ -59,6 +61,7 @@ export default function LivePage() {
                     if (event.data instanceof Blob) {
                         const url = URL.createObjectURL(event.data);
                         setFrame(url);
+                        setIsStreamReady(true);
                     }
                 }
             };
@@ -138,6 +141,22 @@ export default function LivePage() {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <p className="text-secondary-text">Stream not found</p>
+            </div>
+        );
+    }
+
+    // Show loader until stream is ready (first frame received)
+    if (!isStreamReady && isRunning) {
+        return (
+            <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                    <p className="text-lg font-medium text-text-color">
+                        Connecting to stream<span className="animate-pulse">...</span>
+                    </p>
+                    <span className="text-base text-secondary-text mt-1">
+                        {job.sourceType === "webcam" ? "Opening webcam" : "Connecting to RTSP stream"}
+                    </span>
+                </div>
             </div>
         );
     }
