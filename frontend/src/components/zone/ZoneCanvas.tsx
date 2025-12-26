@@ -11,6 +11,8 @@ interface ZoneCanvasProps {
     onZonesChange: (zones: Zone[]) => void;
     onPointAdded: (zoneId: string, point: Point) => void;
     onFrameLoaded: (width: number, height: number) => void;
+    onZoneSelect: (zoneId: string) => void;
+    onAutoCreateZone: (firstPoint: Point) => void;
 }
 
 function getColorFromClassId(classId: number): string {
@@ -26,6 +28,8 @@ export function ZoneCanvas({
     onZonesChange,
     onPointAdded,
     onFrameLoaded,
+    onZoneSelect,
+    onAutoCreateZone,
 }: ZoneCanvasProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const imageRef = useRef<HTMLImageElement | null>(null);
@@ -170,8 +174,9 @@ export function ZoneCanvas({
                 ctx.lineTo(scaledPoints[i].x, scaledPoints[i].y);
             }
 
-            // Close polygon if complete
-            if (zone.points.length >= maxPoints) {
+            // Close polygon if it has 3+ points and is not actively being drawn
+            // (active zone stays open so user can add more points)
+            if (zone.points.length >= 3 && !isActive) {
                 ctx.closePath();
             }
             ctx.stroke();
@@ -281,16 +286,31 @@ export function ZoneCanvas({
         const x = (e.clientX - rect.left) / scale;
         const y = (e.clientY - rect.top) / scale;
 
-        // Check if clicking on a point
+        // 1. Check if clicking on a point (drag point)
         const pointHit = getPointAt(x, y);
         if (pointHit) {
+            // Check if clicking on first point of active zone with 3+ points (close polygon)
+            if (activeZoneId && pointHit.zoneId === activeZoneId && pointHit.index === 0) {
+                const activeZone = zones.find(z => z.id === activeZoneId);
+                if (activeZone && activeZone.points.length >= 3) {
+                    // Close the polygon by moving to a new zone (deselect current)
+                    onAutoCreateZone({ x: -1, y: -1 }); // Signal to create empty new zone
+                    return;
+                }
+            }
             setDraggedPoint(pointHit);
             return;
         }
 
-        // Check if clicking inside a zone
+        // 2. Check if clicking inside a zone
         const zoneId = getZoneAt(x, y);
         if (zoneId) {
+            // If clicking on a different zone, SELECT it (new behavior)
+            if (activeZoneId !== zoneId) {
+                onZoneSelect(zoneId);
+                return;
+            }
+            // If clicking on the already active zone, allow dragging
             const zone = zones.find(z => z.id === zoneId);
             if (zone) {
                 setDraggedZone({
@@ -301,13 +321,33 @@ export function ZoneCanvas({
             return;
         }
 
-        // Otherwise, if active zone, add point
+        // 3. Clicking on empty area
+        const newPoint = { x: Math.round(x), y: Math.round(y) };
+
         if (activeZoneId) {
             const activeZone = zones.find((z) => z.id === activeZoneId);
             if (activeZone && activeZone.points.length < maxPoints) {
-                const newPoint = { x: Math.round(x), y: Math.round(y) };
+                // Add point to active zone
                 onPointAdded(activeZoneId, newPoint);
+            } else {
+                // Active zone is complete, auto-create new zone
+                onAutoCreateZone(newPoint);
             }
+        } else {
+            // No active zone, auto-create new zone with first point
+            onAutoCreateZone(newPoint);
+        }
+    };
+
+    // Handle double-click to close polygon (deselect current zone)
+    const handleDoubleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        if (!activeZoneId) return;
+
+        const activeZone = zones.find(z => z.id === activeZoneId);
+        if (activeZone && activeZone.points.length >= 2) {
+            // Zone has enough points, close it by auto-creating a new zone
+            onAutoCreateZone({ x: -1, y: -1 }); // Signal to create empty new zone
         }
     };
 
@@ -417,6 +457,7 @@ export function ZoneCanvas({
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
                 onMouseLeave={handleMouseLeave}
+                onDoubleClick={handleDoubleClick}
                 onContextMenu={handleContextMenu}
                 className="rounded-lg shadow-2xl transition-shadow duration-300"
                 style={{

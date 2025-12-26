@@ -52,7 +52,7 @@ export default function ZonePage() {
     // State
     const [zones, setZones] = useState<Zone[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
-    const [maxPoints, setMaxPoints] = useState(4);
+    const [maxPoints] = useState(12); // High default for flexible polygon drawing
     const [confidence, setConfidence] = useState(35);
     const [model, setModel] = useState("yolo11n.pt");
     const [trackerConfig, setTrackerConfig] = useState<TrackerConfig>({
@@ -113,6 +113,20 @@ export default function ZonePage() {
         const newZone: Zone = {
             id: generateZoneId(),
             points: [],
+            classId: 0,
+            color: getColorFromClassId(0),
+            label: `Zone ${zones.length + 1}`,
+        };
+        setZones((prev) => [...prev, newZone]);
+        setActiveZoneId(newZone.id);
+    }, [zones.length]);
+
+    // Auto-create a new zone with the first point already added (for click-to-create UX)
+    // If firstPoint is {x: -1, y: -1}, create empty zone (used for closing current polygon)
+    const handleAutoCreateZone = useCallback((firstPoint: Point) => {
+        const newZone: Zone = {
+            id: generateZoneId(),
+            points: firstPoint.x >= 0 && firstPoint.y >= 0 ? [firstPoint] : [],
             classId: 0,
             color: getColorFromClassId(0),
             label: `Zone ${zones.length + 1}`,
@@ -262,7 +276,6 @@ export default function ZonePage() {
                 <ZoneSidebar
                     zones={zones}
                     activeZoneId={activeZoneId}
-                    maxPoints={maxPoints}
                     confidence={confidence}
                     model={model}
                     trackerConfig={trackerConfig}
@@ -271,7 +284,6 @@ export default function ZonePage() {
                     onZoneDelete={handleZoneDelete}
                     onZoneClassChange={handleZoneClassChange}
                     onZoneLabelChange={handleZoneLabelChange}
-                    onMaxPointsChange={setMaxPoints}
                     onConfidenceChange={setConfidence}
                     onModelChange={setModel}
                     onTrackerConfigChange={setTrackerConfig}
@@ -288,20 +300,12 @@ export default function ZonePage() {
                     onZonesChange={setZones}
                     onPointAdded={handlePointAdded}
                     onFrameLoaded={handleFrameLoaded}
+                    onZoneSelect={setActiveZoneId}
+                    onAutoCreateZone={handleAutoCreateZone}
                 />
             </div>
 
-            {/* Footer */}
-            <footer className="absolute bottom-0 left-0 right-0 flex justify-between items-center py-2.5 px-3 text-sm text-secondary-text">
-                <div className="flex gap-6">
-                    <p>
-                        Width: <span className="text-text-color">{frameSize.width} px</span>
-                    </p>
-                    <p>
-                        Height: <span className="text-text-color">{frameSize.height} px</span>
-                    </p>
-                </div>
-            </footer>
+
         </main>
     );
 }

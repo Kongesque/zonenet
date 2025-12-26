@@ -7,7 +7,6 @@ import { COCO_CLASSES } from "@/utils/types";
 interface ZoneSidebarProps {
     zones: Zone[];
     activeZoneId: string | null;
-    maxPoints: number;
     confidence: number;
     model: string;
     trackerConfig: {
@@ -21,7 +20,6 @@ interface ZoneSidebarProps {
     onZoneDelete: (zoneId: string) => void;
     onZoneClassChange: (zoneId: string, classId: number) => void;
     onZoneLabelChange: (zoneId: string, label: string) => void;
-    onMaxPointsChange: (value: number) => void;
     onConfidenceChange: (value: number) => void;
     onModelChange: (value: string) => void;
     onTrackerConfigChange: (config: {
@@ -50,7 +48,6 @@ const MODEL_OPTIONS = [
 export function ZoneSidebar({
     zones,
     activeZoneId,
-    maxPoints,
     confidence,
     model,
     trackerConfig,
@@ -59,7 +56,6 @@ export function ZoneSidebar({
     onZoneDelete,
     onZoneClassChange,
     onZoneLabelChange,
-    onMaxPointsChange,
     onConfidenceChange,
     onModelChange,
     onTrackerConfigChange,
@@ -94,8 +90,8 @@ export function ZoneSidebar({
     const canProcess = zones.some((z) => z.points.length >= 2);
 
     return (
-        <section className="w-full md:w-[280px] shrink-0 p-2 md:p-4 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
-            <div className="overflow-y-auto max-h-[calc(100vh-200px)] p-3">
+        <section className="w-full md:w-[280px] shrink-0 p-4 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
+            <div className="overflow-y-auto max-h-[calc(100vh-200px)]">
                 <h2 className="text-sm font-semibold text-text-color mb-4">
                     Zone Selection
                 </h2>
@@ -158,7 +154,7 @@ export function ZoneSidebar({
                             </div>
 
                             <div className="text-xs text-secondary-text mt-2">
-                                {zone.points.length} / {maxPoints} points
+                                {zone.points.length} points
                                 {zone.points.length === 2 && " (Line)"}
                                 {zone.points.length >= 3 && " (Polygon)"}
                             </div>
@@ -176,22 +172,6 @@ export function ZoneSidebar({
                 </button>
 
                 <div className="space-y-4">
-                    {/* Points Slider */}
-                    <div>
-                        <div className="flex justify-between text-sm mb-2">
-                            <span className="text-secondary-text">Points</span>
-                            <span className="text-text-color font-medium">{maxPoints}</span>
-                        </div>
-                        <input
-                            type="range"
-                            value={maxPoints}
-                            min={2}
-                            max={8}
-                            onChange={(e) => onMaxPointsChange(Number(e.target.value))}
-                            className="w-full h-1 bg-gray-500 rounded-full appearance-none cursor-pointer accent-text-color"
-                        />
-                    </div>
-
                     {/* Confidence Slider */}
                     <div>
                         <div className="flex justify-between text-sm mb-2">
