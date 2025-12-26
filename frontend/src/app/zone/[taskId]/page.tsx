@@ -52,6 +52,9 @@ export default function ZonePage() {
     // State
     const [zones, setZones] = useState<Zone[]>([]);
     const [activeZoneId, setActiveZoneId] = useState<string | null>(null);
+    // Detection mode
+    const [detectionMode, setDetectionMode] = useState<'zone' | 'frame'>('zone');
+    const [frameClassIds, setFrameClassIds] = useState<number[]>([0]); // For frame-wide mode
     // Configuration
     const maxPoints = 12; // High default for flexible polygon drawing
     const [confidence, setConfidence] = useState(35);
@@ -152,8 +155,29 @@ export default function ZonePage() {
     }, []);
 
     const handleProcess = useCallback(async () => {
-        const completeZones = zones.filter((z) => z.points.length >= 2);
-        if (completeZones.length === 0) return;
+        let zonesToProcess: Zone[];
+
+        if (detectionMode === 'frame') {
+            // Frame-wide mode: Create synthetic zone covering entire frame
+            const syntheticZone: Zone = {
+                id: 'global',
+                points: [
+                    { x: 0, y: 0 },
+                    { x: frameSize.width, y: 0 },
+                    { x: frameSize.width, y: frameSize.height },
+                    { x: 0, y: frameSize.height }
+                ],
+                classIds: frameClassIds,
+                color: getColorFromClassId(frameClassIds[0]),
+                label: 'Global Detection'
+            };
+            zonesToProcess = [syntheticZone];
+        } else {
+            // Zone-based mode: Use regular zones
+            const completeZones = zones.filter((z) => z.points.length >= 2);
+            if (completeZones.length === 0) return;
+            zonesToProcess = completeZones;
+        }
 
         // Check if this is a live stream (RTSP/webcam)
         const isLiveStream = job?.sourceType === "rtsp" || job?.sourceType === "webcam";
@@ -165,7 +189,7 @@ export default function ZonePage() {
 
         try {
             const response = await api.processJob(taskId, {
-                zones: completeZones,
+                zones: zonesToProcess,
                 confidence,
                 model,
                 trackerConfig,
@@ -201,7 +225,7 @@ export default function ZonePage() {
             console.error("Failed to start processing:", error);
             setIsProcessing(false);
         }
-    }, [zones, confidence, model, trackerConfig, taskId, router, job?.sourceType]);
+    }, [zones, confidence, model, trackerConfig, taskId, router, job?.sourceType, detectionMode, frameClassIds, frameSize]);
 
     if (isLoading) {
         return <LoadingOverlay message="Loading..." />;
@@ -265,6 +289,10 @@ export default function ZonePage() {
                     confidence={confidence}
                     model={model}
                     trackerConfig={trackerConfig}
+                    detectionMode={detectionMode}
+                    frameClassIds={frameClassIds}
+                    onDetectionModeChange={setDetectionMode}
+                    onFrameClassIdsChange={setFrameClassIds}
                     onZoneSelect={setActiveZoneId}
                     onZoneDelete={handleZoneDelete}
                     onZoneClassChange={handleZoneClassChange}
@@ -276,18 +304,38 @@ export default function ZonePage() {
                     isProcessing={isProcessing}
                 />
 
-                {/* Canvas */}
-                <ZoneCanvas
-                    frameUrl={frameUrl}
-                    zones={zones}
-                    activeZoneId={activeZoneId}
-                    maxPoints={maxPoints}
-                    onZonesChange={setZones}
-                    onPointAdded={handlePointAdded}
-                    onFrameLoaded={handleFrameLoaded}
-                    onZoneSelect={setActiveZoneId}
-                    onAutoCreateZone={handleAutoCreateZone}
-                />
+                {/* Canvas - Conditional based on detection mode */}
+                {detectionMode === 'zone' ? (
+                    <ZoneCanvas
+                        frameUrl={frameUrl}
+                        zones={zones}
+                        activeZoneId={activeZoneId}
+                        maxPoints={maxPoints}
+                        onZonesChange={setZones}
+                        onPointAdded={handlePointAdded}
+                        onFrameLoaded={handleFrameLoaded}
+                        onZoneSelect={setActiveZoneId}
+                        onAutoCreateZone={handleAutoCreateZone}
+                    />
+                ) : (
+                    <div className="flex-1 flex items-center justify-center p-4 bg-primary-color border border-primary-border rounded-xl overflow-hidden relative">
+                        {frameUrl && (
+                            <img
+                                src={frameUrl}
+                                alt="Frame preview"
+                                className="absolute inset-0 w-full h-full object-contain opacity-20 p-4"
+                            />
+                        )}
+                        <div className="relative z-10 flex flex-col items-center justify-center text-center p-8">
+                            <h3 className="text-2xl font-bold text-text-color mb-2">
+                                Frame-Wide Detection
+                            </h3>
+                            <p className="text-secondary-text max-w-md">
+                                Detecting <span className="text-blue-400 font-semibold">{frameClassIds.length} class{frameClassIds.length > 1 ? 'es' : ''}</span> across the entire video frame
+                            </p>
+                        </div>
+                    </div>
+                )}
             </div>
 
 

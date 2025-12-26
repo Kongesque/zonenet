@@ -15,6 +15,10 @@ interface ZoneSidebarProps {
         match_thresh: number;
         track_buffer: number;
     };
+    detectionMode: 'zone' | 'frame';
+    frameClassIds: number[];
+    onDetectionModeChange: (mode: 'zone' | 'frame') => void;
+    onFrameClassIdsChange: (classIds: number[]) => void;
     onZoneSelect: (zoneId: string) => void;
     onZoneDelete: (zoneId: string) => void;
     onZoneClassChange: (zoneId: string, classIds: number[]) => void;
@@ -50,6 +54,10 @@ export function ZoneSidebar({
     confidence,
     model,
     trackerConfig,
+    detectionMode,
+    frameClassIds,
+    onDetectionModeChange,
+    onFrameClassIdsChange,
     onZoneSelect,
     onZoneDelete,
     onZoneClassChange,
@@ -85,114 +93,194 @@ export function ZoneSidebar({
         });
     };
 
-    const canProcess = zones.some((z) => z.points.length >= 2);
+    const canProcess = detectionMode === 'frame' || zones.some((z) => z.points.length >= 2);
 
     return (
         <section className="w-full md:w-[280px] shrink-0 p-4 flex flex-col gap-4 md:justify-between order-2 md:order-1 bg-primary-color border border-primary-border rounded-xl">
             <div className="overflow-y-auto max-h-[calc(100vh-200px)]">
-                <h2 className="text-sm font-semibold text-text-color mb-4">
-                    Zone Selection
-                </h2>
-
-                {/* Zone List */}
-                <div className="space-y-4 mb-4">
-                    {zones.map((zone) => (
-                        <div
-                            key={zone.id}
-                            className={`p-3 rounded-lg border cursor-pointer transition-all ${activeZoneId === zone.id
-                                ? "border-text-color bg-sidebar-item-hover"
-                                : "border-btn-border hover:border-gray-400"
+                {/* Detection Mode Toggle */}
+                <div className="mb-4">
+                    <h2 className="text-sm font-semibold text-text-color mb-3">
+                        Detection Mode
+                    </h2>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => onDetectionModeChange('zone')}
+                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${detectionMode === 'zone'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-btn-bg text-secondary-text hover:bg-btn-hover border border-primary-border'
                                 }`}
-                            onClick={() => onZoneSelect(zone.id)}
                         >
-                            <div className="flex items-center justify-between mb-2">
-                                <div className="flex items-center gap-2">
-                                    <div
-                                        className="w-3 h-3 rounded-full"
-                                        style={{ backgroundColor: getColorFromClassId(zone.classIds[0]) }}
-                                    />
-                                    <input
-                                        type="text"
-                                        value={zone.label}
-                                        onChange={(e) => onZoneLabelChange(zone.id, e.target.value)}
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="bg-transparent text-sm text-text-color font-medium border-none outline-none w-12"
-                                    />
-                                    <Pencil className="w-3 h-3 text-secondary-text opacity-50" />
-                                </div>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onZoneDelete(zone.id);
-                                    }}
-                                    className="p-1 hover:bg-delete-text/20 rounded text-delete-text"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-
-                            <div className="space-y-2">
-                                <span className="text-xs text-secondary-text">Target Classes:</span>
-
-                                {/* Selected Classes as Tags */}
-                                <div className="flex flex-wrap gap-1.5">
-                                    {zone.classIds.map((classId) => (
-                                        <div
-                                            key={classId}
-                                            className="group flex items-center gap-1 px-2 py-0.5 rounded bg-btn-bg border border-btn-border text-xs text-text-color"
-                                        >
-                                            <span>{COCO_CLASSES[classId]?.charAt(0).toUpperCase() + COCO_CLASSES[classId]?.slice(1)}</span>
-                                            <button
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    const newClassIds = zone.classIds.filter(id => id !== classId);
-                                                    if (newClassIds.length > 0) {
-                                                        onZoneClassChange(zone.id, newClassIds);
-                                                    }
-                                                }}
-                                                className="opacity-50 hover:opacity-100 hover:text-delete-text transition-opacity"
-                                            >
-                                                ×
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                {/* Add Class Dropdown */}
-                                <select
-                                    value=""
-                                    onChange={(e) => {
-                                        const newClassId = Number(e.target.value);
-                                        if (!zone.classIds.includes(newClassId)) {
-                                            onZoneClassChange(zone.id, [...zone.classIds, newClassId]);
-                                        }
-                                        e.target.value = ""; // Reset
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="w-full bg-btn-bg text-text-color text-xs border border-dashed border-btn-border rounded px-2 py-1.5"
-                                >
-                                    <option value="" disabled>+ Add Class</option>
-                                    {Object.entries(COCO_CLASSES)
-                                        .sort((a, b) => a[1].localeCompare(b[1]))
-                                        .filter(([id]) => !zone.classIds.includes(Number(id)))
-                                        .map(([id, name]) => (
-                                            <option key={id} value={id}>
-                                                {name.charAt(0).toUpperCase() + name.slice(1)}
-                                            </option>
-                                        ))}
-                                </select>
-                            </div>
-
-                            <div className="text-xs text-secondary-text mt-2">
-                                {zone.points.length} points
-                                {zone.points.length === 2 && " (Line)"}
-                                {zone.points.length >= 3 && " (Polygon)"}
-                            </div>
-                        </div>
-                    ))}
+                            Zone-Based
+                        </button>
+                        <button
+                            onClick={() => onDetectionModeChange('frame')}
+                            className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${detectionMode === 'frame'
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-btn-bg text-secondary-text hover:bg-btn-hover border border-primary-border'
+                                }`}
+                        >
+                            Frame-Wide
+                        </button>
+                    </div>
                 </div>
 
+                {/* Frame-Wide Class Selector (only shown in frame mode) */}
+                {detectionMode === 'frame' && (
+                    <div className="mb-4 p-3 rounded-lg bg-card-bg border border-primary-border">
+                        <h3 className="text-xs font-semibold text-text-color mb-2">Target Classes</h3>
+                        <div className="flex flex-wrap gap-1.5 mb-2">
+                            {frameClassIds.map(classId => (
+                                <span
+                                    key={classId}
+                                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium border"
+                                    style={{
+                                        backgroundColor: `${getColorFromClassId(classId)}20`,
+                                        borderColor: `${getColorFromClassId(classId)}40`,
+                                        color: getColorFromClassId(classId)
+                                    }}
+                                >
+                                    {COCO_CLASSES[classId]}
+                                    {frameClassIds.length > 1 && (
+                                        <button
+                                            onClick={() => onFrameClassIdsChange(frameClassIds.filter(id => id !== classId))}
+                                            className="ml-0.5 hover:opacity-70"
+                                        >
+                                            ×
+                                        </button>
+                                    )}
+                                </span>
+                            ))}
+                        </div>
+                        <select
+                            className="w-full px-2 py-2 rounded-lg bg-btn-bg border border-primary-border text-xs text-text-color"
+                            value=""
+                            onChange={(e) => {
+                                const newClassId = parseInt(e.target.value);
+                                if (!frameClassIds.includes(newClassId)) {
+                                    onFrameClassIdsChange([...frameClassIds, newClassId]);
+                                }
+                            }}
+                        >
+                            <option value="" disabled>+ Add Class</option>
+                            {Object.entries(COCO_CLASSES).map(([idx, className]) => (
+                                !frameClassIds.includes(Number(idx)) && (
+                                    <option key={idx} value={idx}>
+                                        {className}
+                                    </option>
+                                )
+                            ))}
+                        </select>
+                    </div>
+                )}
 
+                {/* Zone Selection (only shown in zone mode) */}
+                {detectionMode === 'zone' && (
+                    <>
+                        <h2 className="text-sm font-semibold text-text-color mb-4">
+                            Zone Selection
+                        </h2>
+
+                        {/* Zone List */}
+                        <div className="space-y-4 mb-4">
+                            {zones.map((zone) => (
+                                <div
+                                    key={zone.id}
+                                    className={`p-3 rounded-lg border cursor-pointer transition-all ${activeZoneId === zone.id
+                                        ? "border-text-color bg-sidebar-item-hover"
+                                        : "border-btn-border hover:border-gray-400"
+                                        }`}
+                                    onClick={() => onZoneSelect(zone.id)}
+                                >
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className="w-3 h-3 rounded-full"
+                                                style={{ backgroundColor: getColorFromClassId(zone.classIds[0]) }}
+                                            />
+                                            <input
+                                                type="text"
+                                                value={zone.label}
+                                                onChange={(e) => onZoneLabelChange(zone.id, e.target.value)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="bg-transparent text-sm text-text-color font-medium border-none outline-none w-12"
+                                            />
+                                            <Pencil className="w-3 h-3 text-secondary-text opacity-50" />
+                                        </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                onZoneDelete(zone.id);
+                                            }}
+                                            className="p-1 hover:bg-delete-text/20 rounded text-delete-text"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <span className="text-xs text-secondary-text">Target Classes:</span>
+
+                                        {/* Selected Classes as Tags */}
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {zone.classIds.map((classId) => (
+                                                <div
+                                                    key={classId}
+                                                    className="group flex items-center gap-1 px-2 py-0.5 rounded bg-btn-bg border border-btn-border text-xs text-text-color"
+                                                >
+                                                    <span>{COCO_CLASSES[classId]?.charAt(0).toUpperCase() + COCO_CLASSES[classId]?.slice(1)}</span>
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const newClassIds = zone.classIds.filter(id => id !== classId);
+                                                            if (newClassIds.length > 0) {
+                                                                onZoneClassChange(zone.id, newClassIds);
+                                                            }
+                                                        }}
+                                                        className="opacity-50 hover:opacity-100 hover:text-delete-text transition-opacity"
+                                                    >
+                                                        ×
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        {/* Add Class Dropdown */}
+                                        <select
+                                            value=""
+                                            onChange={(e) => {
+                                                const newClassId = Number(e.target.value);
+                                                if (!zone.classIds.includes(newClassId)) {
+                                                    onZoneClassChange(zone.id, [...zone.classIds, newClassId]);
+                                                }
+                                                e.target.value = ""; // Reset
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="w-full bg-btn-bg text-text-color text-xs border border-dashed border-btn-border rounded px-2 py-1.5"
+                                        >
+                                            <option value="" disabled>+ Add Class</option>
+                                            {Object.entries(COCO_CLASSES)
+                                                .sort((a, b) => a[1].localeCompare(b[1]))
+                                                .filter(([id]) => !zone.classIds.includes(Number(id)))
+                                                .map(([id, name]) => (
+                                                    <option key={id} value={id}>
+                                                        {name.charAt(0).toUpperCase() + name.slice(1)}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                    </div>
+
+                                    <div className="text-xs text-secondary-text mt-2">
+                                        {zone.points.length} points
+                                        {zone.points.length === 2 && " (Line)"}
+                                        {zone.points.length >= 3 && " (Polygon)"}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                    </>
+                )}
 
                 <div className="space-y-4">
                     {/* Confidence Slider */}
