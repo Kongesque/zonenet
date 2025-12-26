@@ -15,6 +15,7 @@ export default function LivePage() {
     const taskId = params.taskId as string;
 
     const [isRunning, setIsRunning] = useState(true);
+    const isRunningRef = useRef(true); // Ref to avoid stale closure in WS callbacks
     const [counts, setCounts] = useState<Record<string, number>>({});
     const [connectionStatus, setConnectionStatus] = useState<
         "connecting" | "live" | "stopped"
@@ -27,10 +28,14 @@ export default function LivePage() {
     const [startTime] = useState<Date>(new Date());
     const [elapsedTime, setElapsedTime] = useState(0);
 
-    const { data: job, isLoading } = useQuery({
+    const { data: job, isLoading, refetch } = useQuery({
         queryKey: ["job", taskId],
         queryFn: () => api.getJob(taskId),
         enabled: !!taskId,
+        // Refetch periodically while stream is running to sync zone data
+        refetchInterval: isRunning ? 3000 : false,
+        staleTime: 1000,
+        refetchOnMount: "always",
     });
 
     // Elapsed time counter
@@ -49,12 +54,17 @@ export default function LivePage() {
         if (!taskId || !isRunning) return;
 
         const connectWebSocket = () => {
+            // Check ref before connecting (ref has current value, not stale closure)
+            if (!isRunningRef.current) return;
+
             const ws = new WebSocket(api.getWebSocketUrl(taskId));
             wsRef.current = ws;
 
             ws.onopen = () => {
                 setConnectionStatus("live");
                 retryCountRef.current = 0; // Reset retry count on successful connection
+                // Refetch job data to ensure zones are up to date
+                refetch();
             };
 
             ws.onmessage = (event) => {
@@ -67,9 +77,17 @@ export default function LivePage() {
                     if (data.counts) {
                         setCounts(data.counts);
                     }
-                    // Handle error messages from backend
+                    // Handle error messages from backend - stop on fatal errors
                     if (data.error) {
                         console.error("Stream error:", data.error);
+                        // Stop reconnection attempts on fatal errors
+                        isRunningRef.current = false;
+                        setIsRunning(false);
+                        setConnectionStatus("stopped");
+                        if (wsRef.current) {
+                            wsRef.current.close();
+                            wsRef.current = null;
+                        }
                     }
                 } catch {
                     // Handle raw frame data
@@ -82,24 +100,37 @@ export default function LivePage() {
             };
 
             ws.onerror = () => {
+                // Check ref for current running state (avoids stale closure)
+                if (!isRunningRef.current) {
+                    setConnectionStatus("stopped");
+                    return;
+                }
                 // Don't immediately mark as stopped, try to reconnect
                 if (retryCountRef.current < maxRetries) {
                     retryCountRef.current++;
                     setTimeout(connectWebSocket, 1000); // Retry after 1 second
                 } else {
                     setConnectionStatus("stopped");
+                    setIsRunning(false);
+                    isRunningRef.current = false;
                 }
             };
 
             ws.onclose = () => {
-                // Only mark as stopped if we've exhausted retries or user stopped it
-                if (retryCountRef.current >= maxRetries || !isRunning) {
+                // Use ref to check current running state (avoids stale closure)
+                if (!isRunningRef.current) {
+                    // User stopped or error occurred - don't reconnect
                     setConnectionStatus("stopped");
-                    setIsRunning(false);
-                } else if (isRunning) {
-                    // Try to reconnect
+                    return;
+                }
+                // Only reconnect if we haven't exhausted retries
+                if (retryCountRef.current < maxRetries) {
                     retryCountRef.current++;
                     setTimeout(connectWebSocket, 1000);
+                } else {
+                    setConnectionStatus("stopped");
+                    setIsRunning(false);
+                    isRunningRef.current = false;
                 }
             };
         };
@@ -109,6 +140,7 @@ export default function LivePage() {
         return () => {
             if (wsRef.current) {
                 wsRef.current.close();
+                wsRef.current = null;
             }
         };
     }, [taskId, isRunning]);
@@ -140,18 +172,32 @@ export default function LivePage() {
 
     const handleStop = async () => {
         try {
-            await api.stopLiveStream(taskId);
+            // Set ref FIRST to prevent reconnection attempts
+            isRunningRef.current = false;
+
+            // Close WebSocket immediately
+            if (wsRef.current) {
+                wsRef.current.close();
+                wsRef.current = null;
+            }
+
+            // Update state
             setIsRunning(false);
             setConnectionStatus("stopped");
+
+            // Tell backend to stop
+            await api.stopLiveStream(taskId);
         } catch (error) {
             console.error("Failed to stop stream:", error);
         }
     };
 
     const handleRestart = () => {
-        setIsRunning(true);
-        setConnectionStatus("connecting");
+        // Reset ref first
+        isRunningRef.current = true;
         retryCountRef.current = 0;
+        setConnectionStatus("connecting");
+        setIsRunning(true);
     };
 
     const formatTime = (seconds: number) => {
@@ -180,31 +226,6 @@ export default function LivePage() {
         return (
             <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center">
-                    <div className="relative w-24 h-24 mb-4">
-                        <svg className="w-full h-full -rotate-90 animate-spin" style={{ animationDuration: '3s' }} viewBox="0 0 100 100">
-                            <circle
-                                className="stroke-gray-400/20"
-                                cx="50"
-                                cy="50"
-                                r="42"
-                                fill="none"
-                                strokeWidth="6"
-                            />
-                            <circle
-                                className="stroke-text-color"
-                                cx="50"
-                                cy="50"
-                                r="42"
-                                fill="none"
-                                strokeWidth="6"
-                                strokeLinecap="round"
-                                strokeDasharray="80 184"
-                            />
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
-                        </div>
-                    </div>
                     <p className="text-lg font-medium text-text-color">
                         Connecting<span className="animate-pulse">...</span>
                     </p>
