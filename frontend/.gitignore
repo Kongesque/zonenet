@@ -45,6 +45,7 @@ src/app/api/mock-data.ts
 src/app/api/jobs/
 src/app/api/system-info/
 public/media/mock/
+public/media/outputs/
 clean_mock_script.sh
 generate_mock.py
 NOTE.md

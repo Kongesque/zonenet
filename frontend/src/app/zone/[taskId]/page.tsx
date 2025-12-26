@@ -158,14 +158,20 @@ export default function ZonePage() {
         setIsProcessing(true);
 
         try {
-            await api.processJob(taskId, {
+            const response = await api.processJob(taskId, {
                 zones: completeZones,
                 confidence,
                 model,
                 trackerConfig,
             });
 
-            // Poll for progress
+            // For live streams, redirect immediately (no loader)
+            if (response.redirect) {
+                router.push(response.redirect);
+                return;
+            }
+
+            // For video files, poll for progress
             const pollProgress = async () => {
                 try {
                     const data = await api.getProgress(taskId);

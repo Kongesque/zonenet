@@ -110,8 +110,8 @@ class ApiClient {
             model: string;
             trackerConfig?: TrackerConfig;
         }
-    ): Promise<void> {
-        await this.request(`/api/jobs/${taskId}/process`, {
+    ): Promise<{ success: boolean; redirect?: string }> {
+        return this.request(`/api/jobs/${taskId}/process`, {
             method: "POST",
             body: JSON.stringify(options),
         });
