@@ -34,7 +34,7 @@ https://github.com/user-attachments/assets/647da3b4-74e2-4da8-872c-6d9200b7c0af
 
 ## 🚀 Key Features
 
-- **Running on Your Metal**: M1/M2/M3, CUDA, Coral.
+- **Running on Your Metal**: CUDA, Coral.
 - **Private by Design**: No cloud, no telemetry.
 - **Geometry-based Logic**: Draw polygons, not just grids.
 - **Advanced Geofencing & ROI**: Draw precise, multi-point polygon zones to count objects only where it matters.

@@ -634,6 +634,34 @@ wheels = [
 ]
 
 [[package]]
+name = "locus-vision"
+version = "0.2.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "lapx" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "opencv-python-headless" },
+    { name = "python-multipart" },
+    { name = "ultralytics" },
+    { name = "uvicorn" },
+    { name = "werkzeug" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.115.0" },
+    { name = "lapx", specifier = ">=0.5.5" },
+    { name = "numpy", specifier = ">=1.26.0" },
+    { name = "opencv-python-headless", specifier = ">=4.9.0" },
+    { name = "python-multipart", specifier = ">=0.0.18" },
+    { name = "ultralytics", specifier = ">=8.3.0" },
+    { name = "uvicorn", specifier = ">=0.32.0" },
+    { name = "werkzeug", specifier = ">=3.0.0" },
+]
+
+[[package]]
 name = "markupsafe"
 version = "3.0.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1961,32 +1989,4 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/45/ea/b0f8eeb287f8df9066e56e831c7824ac6bab645dd6c7a8f4b2d767944f9b/werkzeug-3.1.4.tar.gz", hash = "sha256:cd3cd98b1b92dc3b7b3995038826c68097dcb16f9baa63abe35f20eafeb9fe5e", size = 864687, upload-time = "2025-11-29T02:15:22.841Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2f/f9/9e082990c2585c744734f85bec79b5dae5df9c974ffee58fe421652c8e91/werkzeug-3.1.4-py3-none-any.whl", hash = "sha256:2ad50fb9ed09cc3af22c54698351027ace879a0b60a3b5edf5730b2f7d876905", size = 224960, upload-time = "2025-11-29T02:15:21.13Z" },
-]
-
-[[package]]
-name = "zonenet-backend"
-version = "0.2.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "fastapi" },
-    { name = "lapx" },
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "opencv-python-headless" },
-    { name = "python-multipart" },
-    { name = "ultralytics" },
-    { name = "uvicorn" },
-    { name = "werkzeug" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = ">=0.115.0" },
-    { name = "lapx", specifier = ">=0.5.5" },
-    { name = "numpy", specifier = ">=1.26.0" },
-    { name = "opencv-python-headless", specifier = ">=4.9.0" },
-    { name = "python-multipart", specifier = ">=0.0.18" },
-    { name = "ultralytics", specifier = ">=8.3.0" },
-    { name = "uvicorn", specifier = ">=0.32.0" },
-    { name = "werkzeug", specifier = ">=3.0.0" },
 ]
