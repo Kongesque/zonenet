@@ -1,6 +1,7 @@
 """
 Simple single-password authentication with JWT cookies and Argon2id hashing.
 """
+import secrets
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -44,18 +45,29 @@ def hash_password(password: str) -> str:
 
 
 def create_access_token() -> str:
-    """Create a JWT access token with expiration."""
-    expire = datetime.now(UTC) + timedelta(
-        hours=settings.ACCESS_TOKEN_EXPIRE_HOURS
-    )
-    payload = {"exp": expire, "type": "access"}
+    """Create a JWT access token with expiration and security claims."""
+    now = datetime.now(UTC)
+    expire = now + timedelta(hours=settings.ACCESS_TOKEN_EXPIRE_HOURS)
+    payload = {
+        "exp": expire,
+        "iat": now,                        # Issued at
+        "jti": secrets.token_hex(16),      # Unique token ID
+        "iss": "locus",                    # Issuer
+        "type": "access",
+    }
     return jwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
 
 
 def verify_token(token: str) -> bool:
-    """Verify a JWT token is valid and not expired."""
+    """Verify a JWT token is valid, not expired, and from Locus."""
     try:
-        jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=["HS256"],
+            options={"require": ["exp", "iat", "jti", "iss"]},
+            issuer="locus",
+        )
         return True
     except jwt.PyJWTError:
         return False

@@ -12,8 +12,8 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
     )
 
-    # JWT secret key for token signing
-    SECRET_KEY: str = "super-secret-key-change-in-production"
+    # JWT secret key for token signing (REQUIRED - no default for security)
+    SECRET_KEY: str
 
     # Data directory for databases, media, and config
     DATA_DIR: str = "./data"
