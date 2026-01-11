@@ -1,17 +1,41 @@
 """
-Simple single-password authentication with JWT cookies.
+Simple single-password authentication with JWT cookies and Argon2id hashing.
 """
 from datetime import datetime, timedelta, timezone
 
 import jwt
+from argon2 import PasswordHasher
+from argon2.exceptions import VerifyMismatchError
 from fastapi import HTTPException, Request, status
 
 from app.core.config import settings
 
+# Initialize Argon2id hasher with OWASP 2025 parameters
+_hasher = PasswordHasher(
+    memory_cost=settings.ARGON2_MEMORY_COST,
+    time_cost=settings.ARGON2_TIME_COST,
+    parallelism=settings.ARGON2_PARALLELISM,
+)
+
 
 def verify_password(input_password: str) -> bool:
-    """Check if the provided password matches the configured password."""
-    return input_password == settings.LOCUS_PASSWORD
+    """
+    Check if the provided password matches the stored hash.
+    Uses Argon2id for secure password verification.
+    """
+    try:
+        _hasher.verify(settings.LOCUS_PASSWORD_HASH, input_password)
+        return True
+    except VerifyMismatchError:
+        return False
+
+
+def hash_password(password: str) -> str:
+    """
+    Hash a password using Argon2id.
+    Used for generating the initial password hash.
+    """
+    return _hasher.hash(password)
 
 
 def create_access_token() -> str:

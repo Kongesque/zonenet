@@ -7,6 +7,8 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Header } from "@/components/header"
 import { VideoProvider } from "@/components/video-context"
+import { AuthProvider } from "@/components/auth-context"
+import { AuthGuard } from "@/components/auth-guard"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -43,15 +45,19 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <VideoProvider>
-            <SidebarProvider defaultOpen={defaultOpen}>
-              <AppSidebar />
-              <SidebarInset>
-                <Header />
-                {children}
-              </SidebarInset>
-            </SidebarProvider>
-          </VideoProvider>
+          <AuthProvider>
+            <AuthGuard>
+              <VideoProvider>
+                <SidebarProvider defaultOpen={defaultOpen}>
+                  <AppSidebar />
+                  <SidebarInset>
+                    <Header />
+                    {children}
+                  </SidebarInset>
+                </SidebarProvider>
+              </VideoProvider>
+            </AuthGuard>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

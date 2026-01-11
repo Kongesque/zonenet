@@ -1,7 +1,9 @@
 """
 Authentication routes - login, logout, and auth status.
 """
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.core.auth import (
     create_access_token,
@@ -18,12 +20,17 @@ from app.schemas.auth import (
 
 router = APIRouter()
 
+# Rate limiter for login endpoint
+limiter = Limiter(key_func=get_remote_address)
+
 
 @router.post("/login", response_model=LoginResponse)
-async def login(data: LoginRequest, response: Response) -> LoginResponse:
+@limiter.limit(settings.RATE_LIMIT_LOGIN)
+async def login(request: Request, data: LoginRequest, response: Response) -> LoginResponse:
     """
     Authenticate with the single password.
     Sets an HTTP-only cookie on success.
+    Rate limited to prevent brute force attacks.
     """
     if not verify_password(data.password):
         raise HTTPException(

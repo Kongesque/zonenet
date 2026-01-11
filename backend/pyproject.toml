@@ -10,6 +10,8 @@ dependencies = [
     "aiosqlite>=0.21.0",
     "python-multipart>=0.0.20",
     "pyjwt>=2.10.0",
+    "argon2-cffi>=23.1.0",
+    "slowapi>=0.1.9",
 ]
 
 [project.optional-dependencies]

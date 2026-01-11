@@ -1,6 +1,6 @@
-# Locus - Self-hosted Computer Vision Platform
+# Locus - Self-hosted Spatial Analytics Platform
 
-A modern, self-hosted computer vision platform for zone-based detection and analytics.
+A modern, self-hosted Spatial Analytics platform for zone-based detection and analytics.
 
 ## Project Structure
 
