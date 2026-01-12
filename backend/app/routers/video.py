@@ -162,21 +162,29 @@ def run_processing_job(task_id: str, request: ProcessRequest):
     """Background job wrapper."""
     try:
         tasks[task_id]["status"] = "processing"
+        tasks[task_id]["progress"] = 0
         save_task(task_id, tasks[task_id])
         
         input_path = tasks[task_id]["input_path"]
         output_filename = f"{task_id}_output.mp4"
         output_path = OUTPUT_DIR / output_filename
         
+        # Progress callback to update task in memory
+        def on_progress(progress: int):
+            tasks[task_id]["progress"] = progress
+            # Note: Not saving to disk every time to avoid I/O overhead
+        
         # Run synchronous heavy processing
         result = process_video_task(
             input_path=input_path,
             output_path=str(output_path),
             zones=request.zones,
-            model_name=request.model
+            model_name=request.model,
+            progress_callback=on_progress
         )
         
         tasks[task_id]["status"] = "completed"
+        tasks[task_id]["progress"] = 100
         tasks[task_id]["result_url"] = f"/api/video/{task_id}/result"
         tasks[task_id]["count"] = result["count"]
         print(f"Task {task_id} completed. Count: {result['count']}")

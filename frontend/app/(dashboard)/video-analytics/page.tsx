@@ -12,6 +12,7 @@ interface VideoTask {
     format: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
     thumbnail?: string;
+    progress?: number;
 }
 
 export default function Page() {
@@ -33,7 +34,8 @@ export default function Page() {
                 createdAt: new Date(t.created_at || Date.now()).toLocaleDateString(),
                 format: t.format || "MP4",
                 status: t.status,
-                thumbnail: t.thumbnail_url ? `http://localhost:8000${t.thumbnail_url}` : undefined
+                thumbnail: t.thumbnail_url ? `http://localhost:8000${t.thumbnail_url}` : undefined,
+                progress: t.progress
             }));
             setTasks(mappedTasks); // Backend now sorts by default
             setLoading(false);
@@ -45,7 +47,7 @@ export default function Page() {
 
     useEffect(() => {
         fetchTasks();
-        const interval = setInterval(fetchTasks, 5000); // Poll every 5s
+        const interval = setInterval(fetchTasks, 2000); // Poll every 2s for faster progress updates
         return () => clearInterval(interval);
     }, []);
 
@@ -68,13 +70,14 @@ export default function Page() {
                     {filteredHistory.map((item) => (
                         <VideoCard
                             key={item.id}
-                            taskId={item.id} // Updated to use UUID
+                            taskId={item.id}
                             name={item.name}
                             duration={item.duration}
-                            createdAt={item.createdAt} // Should be formatted relative time string if wanted, or raw ISO
+                            createdAt={item.createdAt}
                             format={item.format}
                             status={item.status}
                             thumbnail={item.thumbnail}
+                            progress={item.progress}
                         />
                     ))}
                 </div>

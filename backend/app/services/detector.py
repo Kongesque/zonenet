@@ -4,6 +4,7 @@ import numpy as np
 import shutil
 from pathlib import Path
 from collections import defaultdict
+from typing import Callable, Optional
 from ultralytics import YOLO
 from app.schemas.video import Zone
 from app.core.config import settings
@@ -12,7 +13,8 @@ def process_video_task(
     input_path: str,
     output_path: str,
     zones: list[Zone],
-    model_name: str = "yolo11n"
+    model_name: str = "yolo11n",
+    progress_callback: Optional[Callable[[int], None]] = None
 ):
     """
     Run YOLO detection on video with defined zones.
@@ -112,10 +114,16 @@ def process_video_task(
             
         # Run YOLO with Tracking
         # persist=True ensures ID consistency across frames
-        results = model.track(frame, persist=True, verbose=False)
+        results = model.track(frame, persist=True, verbose=False, conf=0.4)
         
+        # Progress reporting
+        progress = int(frame_count / total_frames * 100)
+        if progress_callback:
+            progress_callback(progress)
+        
+        # Console logging (less frequent to avoid spam)
         if frame_count % 30 == 0:
-            print(f"Processing frame {frame_count}/{total_frames} ({frame_count/total_frames*100:.1f}%)")
+            print(f"Processing frame {frame_count}/{total_frames} ({progress}%)")
         
         if results[0].boxes is not None and results[0].boxes.id is not None:
             boxes = results[0].boxes.xywh.cpu()

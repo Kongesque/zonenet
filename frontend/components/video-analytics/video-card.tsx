@@ -20,6 +20,7 @@ interface VideoCardProps {
     createdAt: string
     format: string
     status: 'pending' | 'processing' | 'completed' | 'failed'
+    progress?: number
     onDownload?: () => void
     onDelete?: () => void
 }
@@ -32,6 +33,7 @@ export function VideoCard({
     createdAt,
     format,
     status = 'completed',
+    progress,
     onDownload,
     onDelete,
 }: VideoCardProps) {
@@ -54,9 +56,11 @@ export function VideoCard({
 
                     {/* Processing Overlay */}
                     {(status === 'processing' || status === 'pending') && (
-                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 z-10">
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-2 z-10">
                             <EchoLoader size={48} className="text-white/80" />
-                            <span className="text-white/80 font-medium animate-pulse text-xs">Processing...</span>
+                            <span className="text-white/80 font-medium text-sm">
+                                {progress !== undefined ? `${progress}%` : 'Starting...'}
+                            </span>
                         </div>
                     )}
                 </div>
