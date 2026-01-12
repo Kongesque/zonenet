@@ -1,6 +1,8 @@
 import cv2
 import time
 import numpy as np
+import shutil
+from pathlib import Path
 from collections import defaultdict
 from ultralytics import YOLO
 from app.schemas.video import Zone
@@ -17,7 +19,19 @@ def process_video_task(
     Adapted from example/detector.py for Locus backend.
     """
     # Load Model
-    model = YOLO(f"{model_name}.pt")
+    models_dir = Path(settings.BASE_DIR) / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    
+    model_path = models_dir / f"{model_name}.pt"
+    
+    # Simplest reliable way for now: Check if exists at target path.
+    if not model_path.exists():
+         # Load standard to trigger download to root
+         temp_model = YOLO(f"{model_name}.pt")
+         # Move it
+         shutil.move(f"{model_name}.pt", model_path)
+    
+    model = YOLO(model_path)
     
     # Video Setup
     cap = cv2.VideoCapture(input_path)

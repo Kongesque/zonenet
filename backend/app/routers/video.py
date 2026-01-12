@@ -1,6 +1,7 @@
 import shutil
 import uuid
 import os
+import json
 from pathlib import Path
 from typing import Literal
 
@@ -13,17 +14,41 @@ from app.core.config import settings
 router = APIRouter()
 
 # Directories
-VIDEO_DIR = Path(settings.DATA_DIR) / "videos"
-INPUT_DIR = VIDEO_DIR / "input"
-OUTPUT_DIR = VIDEO_DIR / "output"
+MEDIA_DIR = Path(settings.DATA_DIR) / "media"
+INPUT_DIR = MEDIA_DIR / "uploads"
+OUTPUT_DIR = MEDIA_DIR / "outputs"
+TASKS_DIR = Path(settings.DATA_DIR) / "tasks"
 
 # Ensure dirs exist
 INPUT_DIR.mkdir(parents=True, exist_ok=True)
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+TASKS_DIR.mkdir(parents=True, exist_ok=True)
 
-# In-memory task store (replace with DB/Redis in prod)
-# { task_id : { status, filename, result_url, created_at, ... } }
-tasks = {}
+# --- Persistence Helpers ---
+def save_task(task_id: str, data: dict):
+    """Save task data to JSON file."""
+    file_path = TASKS_DIR / f"{task_id}.json"
+    with open(file_path, "w") as f:
+        json.dump(data, f, indent=2)
+
+def load_tasks() -> dict:
+    """Load all task JSON files into memory."""
+    loaded_tasks = {}
+    if not TASKS_DIR.exists():
+        return {}
+    
+    for file_path in TASKS_DIR.glob("*.json"):
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+                loaded_tasks[data["id"]] = data
+        except Exception as e:
+            print(f"Failed to load task {file_path}: {e}")
+    return loaded_tasks
+
+# Initialize tasks from disk
+tasks = load_tasks()
+print(f"Loaded {len(tasks)} tasks from disk.")
 
 @router.post("/upload")
 async def upload_video(file: UploadFile = File(...)):
@@ -35,7 +60,7 @@ async def upload_video(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
         
-    tasks[task_id] = {
+    task_data = {
         "id": task_id,
         "status": "pending",
         "filename": filename,
@@ -45,13 +70,16 @@ async def upload_video(file: UploadFile = File(...)):
         "format": "mp4" # Assumption
     }
     
+    tasks[task_id] = task_data
+    save_task(task_id, task_data)
+    
     return {"task_id": task_id}
 
 @router.get("/tasks")
 async def get_tasks():
     """Get all tasks list."""
-    # Convert dict to list
-    return list(tasks.values())
+    # Convert dict to list and sort by creation (roughly)
+    return sorted(list(tasks.values()), key=lambda x: x.get('created_at', ''), reverse=True)
 
 @router.get("/{task_id}")
 async def get_task_status(task_id: str):

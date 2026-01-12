@@ -8,8 +8,6 @@ A modern, self-hosted Spatial Analytics platform for zone-based detection and an
 locus/
 ├── frontend/          # Next.js web application
 ├── backend/           # FastAPI backend API
-├── database/          # Database schemas
-├── docs/              # Documentation
 ├── docker-compose.yml # Container orchestration
 └── README.md
 ```
@@ -102,22 +100,49 @@ DEBUG=True
 RESET_PASSWORD=False  # Set to True and restart to reset admin password
 ```
 
-## Features
+## Key Features
 
-- 🔐 Simple password authentication
-- 📹 Real-time video stream monitoring
-- 🎯 Zone-based object detection
-- 📊 Analytics dashboard
-- 🐳 Docker-ready deployment
+- **🔐 Secured Access**: Simple but secure single-password authentication with Argon2id hashing and HttpOnly cookies.
+- **📹 Real-time Monitoring**: Low-latency video streaming support.
+- **🎯 Zone Analytics**:
+    - Draw custom polygon zones on video.
+    - **YOLO11 Object Detection**: State-of-the-art object detection (Nano model default).
+- **🐳 Production Ready**: Dockerized deployment with automated health checks.
+
+## API Endpoints
+
+Full interactive API documentation is available at:
+- Swagger UI: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ReDoc: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+
+### Core Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/health` | System health check | No |
+| POST | `/api/auth/setup` | Initial password setup (first run only) | No |
+| POST | `/api/auth/login` | Login with password (sets HTTP-only cookie) | No |
+| GET | `/api/auth/me` | Check current session status | Yes |
+
+### Video Analytics Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/video/upload` | Upload video for processing | Yes |
+| POST | `/api/video/{id}/process` | Start async YOLO processing job | Yes |
+| GET | `/api/video/tasks` | List all analytic tasks | Yes |
+| GET | `/api/video/{id}/stream` | Stream original video | Yes |
+| GET | `/api/video/{id}/result` | Stream processed (annotated) video | Yes |
 
 ## Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Frontend  | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui |
-| Backend   | FastAPI, Python 3.12, Pydantic, uv, SlowAPI |
-| Database  | SQLite (auth, events), DuckDB (analytics) |
-| Auth      | Single Password, Argon2id, JWT (HttpOnly Cookies) |
+| **Frontend**  | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, Recharts |
+| **Backend**   | FastAPI, Python 3.12, Pydantic, uv, SlowAPI |
+| **AI / ML**   | YOLO11 (Ultralytics), OpenCV, NumPy |
+| **Database**  | SQLite (auth, events), DuckDB (analytics) |
+| **Auth**      | Single Password, Argon2id, JWT (HttpOnly Cookies) |
 
 ## License
 
