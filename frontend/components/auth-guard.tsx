@@ -16,6 +16,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
     useEffect(() => {
         if (isLoading) return;
 
+        // Redirect authenticated users away from login page
+        if (pathname === "/login" && isAuthenticated) {
+            router.push("/");
+            return;
+        }
+
+        // Redirect users away from setup page if setup is already complete
+        if (pathname === "/setup" && setupComplete === true) {
+            router.push("/");
+            return;
+        }
+
         // If on setup or login page, let them through
         if (pathname === "/setup" || pathname === "/login") {
             return;
