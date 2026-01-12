@@ -1,11 +1,4 @@
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-    title: "Setup - Locus",
-    description: "Initial setup for Locus",
-};
-
-export default function SetupLayout({
+export default function AuthLayout({
     children,
 }: {
     children: React.ReactNode;
