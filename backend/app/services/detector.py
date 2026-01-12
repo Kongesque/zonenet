@@ -32,7 +32,20 @@ def process_video_task(
     # Output Setup
     # Use 'mp4v' or 'avc1' for mp4 (avc1 is H.264, universally supported)
     fourcc = cv2.VideoWriter_fourcc(*'avc1')
-    out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+    
+    # Frame Resampling Logic (Target 24 FPS)
+    target_fps = 24
+    if fps > target_fps:
+        output_fps = target_fps
+        step_size = fps / target_fps
+        # Calculate indices to process: 0, 2.5->3, 5.0->5, etc.
+        # We start from 0 to total_frames
+        process_indices = set(int(round(i * step_size)) for i in range(int(total_frames / step_size)))
+    else:
+        output_fps = fps
+        process_indices = None # Process all
+        
+    out = cv2.VideoWriter(output_path, fourcc, output_fps, (width, height))
     
     # Tracking Setup
     track_history = defaultdict(lambda: [])
@@ -40,6 +53,7 @@ def process_video_task(
     
     # Pre-calculate zones
     zone_polygons = []
+    zone_bboxes = [] # Pre-calculated bounding boxes for AABB check
     zone_filters = [] # List of class ID sets for each zone
     
     # Standard COCO classes mapping (could be imported from config)
@@ -49,6 +63,10 @@ def process_video_task(
     for z in zones:
         poly_points = np.array([[int(p.x), int(p.y)] for p in z.points], np.int32)
         zone_polygons.append(poly_points)
+        
+        # Calculate AABB (x, y, w, h)
+        bbox = cv2.boundingRect(poly_points)
+        zone_bboxes.append(bbox)
         
         # Resolve class filters
         if not z.classes:
@@ -61,29 +79,28 @@ def process_video_task(
             zone_filters.append(allowed_ids)
 
     # Process Frames
-    frame_count = 0
+    frame_count = 0 # 0-indexed for comparison with indices
     start_time = time.time()
     
-    # Frame Skipping Logic (Target ~12 FPS for performance)
-    target_fps = 12
-    should_process_interval = max(1, int(round(fps / target_fps)))
+    # We removed the manual frame skipping loop block below to integrate here
     
     while cap.isOpened():
         success, frame = cap.read()
         if not success:
             break
             
-        frame_count += 1
+        # Check if we should process this frame
+        if process_indices is not None and frame_count not in process_indices:
+             frame_count += 1
+             continue
         
-        # Skip frames to boost speed
-        if frame_count % should_process_interval != 0:
-            continue
+        frame_count += 1 # Increment after check because read() advanced it
             
         # Run YOLO with Tracking
         # persist=True ensures ID consistency across frames
         results = model.track(frame, persist=True, verbose=False)
         
-        if frame_count % (should_process_interval * 10) == 0:
+        if frame_count % 30 == 0:
             print(f"Processing frame {frame_count}/{total_frames} ({frame_count/total_frames*100:.1f}%)")
         
         if results[0].boxes is not None and results[0].boxes.id is not None:
@@ -113,6 +130,12 @@ def process_video_task(
                     if zone_filters[i] is not None:
                         if cls_id not in zone_filters[i]:
                             continue # Skip this zone check for this class type
+
+                    # Optimization: AABB Check first (O(1))
+                    # Avoid expensive pointPolygonTest for objects far away
+                    bx, by, bw, bh = zone_bboxes[i]
+                    if not (bx <= center_x <= bx + bw and by <= center_y <= by + bh):
+                        continue
 
                     # Point Polygon Test
                     # >0 = inside, <0 = outside, 0 = on edge
