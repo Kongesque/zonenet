@@ -54,7 +54,7 @@ export function VideoCard({
 
                     {/* Processing Overlay */}
                     {(status === 'processing' || status === 'pending') && (
-                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 z-10 backdrop-blur-sm">
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 z-10">
                             <EchoLoader size={48} className="text-white/80" />
                             <span className="text-white/80 font-medium animate-pulse text-xs">Processing...</span>
                         </div>

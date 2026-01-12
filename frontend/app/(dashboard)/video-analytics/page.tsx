@@ -11,7 +11,7 @@ interface VideoTask {
     createdAt: string;
     format: string;
     status: 'pending' | 'processing' | 'completed' | 'failed';
-    // Add optional thumbnails if backend provides them eventually
+    thumbnail?: string;
 }
 
 export default function Page() {
@@ -25,16 +25,17 @@ export default function Page() {
             const data = await res.json();
             // Backend returns list directly, so set it.
             // Map backend fields to frontend interface if needed.
-            // Backend keys: id, status, filename, created_at, name, format
+            // Backend keys: id, status, filename, created_at, name, format, thumbnail_url
             const mappedTasks = data.map((t: any) => ({
                 id: t.id,
                 name: t.name,
                 duration: t.duration || "00:00",
                 createdAt: new Date(t.created_at || Date.now()).toLocaleDateString(),
                 format: t.format || "MP4",
-                status: t.status
+                status: t.status,
+                thumbnail: t.thumbnail_url ? `http://localhost:8000${t.thumbnail_url}` : undefined
             }));
-            setTasks(mappedTasks.reverse()); // Show newest first
+            setTasks(mappedTasks); // Backend now sorts by default
             setLoading(false);
         } catch (err) {
             console.error("Failed to load video tasks", err);
@@ -73,6 +74,7 @@ export default function Page() {
                             createdAt={item.createdAt} // Should be formatted relative time string if wanted, or raw ISO
                             format={item.format}
                             status={item.status}
+                            thumbnail={item.thumbnail}
                         />
                     ))}
                 </div>

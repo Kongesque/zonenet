@@ -43,6 +43,7 @@ backend/build/
 backend/.ruff_cache/
 backend/.pytest_cache/
 backend/uv.lock
+backend/models/
 
 # Data 
 data/

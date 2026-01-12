@@ -17,6 +17,10 @@ class Settings(BaseSettings):
 
     # Data directory for databases, media, and config
     DATA_DIR: str = "./data"
+    
+    # Base directory (Project Root / Backend Root)
+    # We default to "." (current working dir) which is usually 'backend/' when running uvicorn
+    BASE_DIR: str = "."
 
     # CORS - Frontend URL for cookie sharing
     FRONTEND_URL: str = "http://localhost:3000"
