@@ -58,23 +58,37 @@ export function UploadArea() {
     const router = useRouter();
     const { setVideoUrl, setVideoType } = useVideo();
 
-    // TODO: Implement submit handler
+    // Implement submit handler
     const handleSubmit = async () => {
         if (!file) return;
 
-        // Temporary flow: Generate UUID and redirect
-        const taskId = crypto.randomUUID();
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
 
-        // Create object URL for the file to preview it
-        const objectUrl = URL.createObjectURL(file);
-        setVideoUrl(objectUrl);
-        setVideoType('file');
+            const response = await fetch("http://localhost:8000/api/video/upload", {
+                method: "POST",
+                body: formData,
+                // credentials: "include", // Enable if using cookies
+            });
 
-        router.push(`/create/${taskId}`);
+            if (!response.ok) {
+                console.error("Upload failed");
+                return;
+            }
 
-        // TODO: Upload file to API
-        // TODO: Handle upload progress
-        // TODO: Handle success/error states
+            const data = await response.json();
+            const { task_id } = data;
+
+            // Use backend stream URL
+            setVideoUrl(`http://localhost:8000/api/video/${task_id}/stream`);
+            setVideoType('file');
+
+            router.push(`/create/${task_id}`);
+
+        } catch (error) {
+            console.error("Error uploading video:", error);
+        }
     };
 
     return (

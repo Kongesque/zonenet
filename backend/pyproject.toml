@@ -12,6 +12,9 @@ dependencies = [
     "pyjwt>=2.10.0",
     "argon2-cffi>=23.1.0",
     "slowapi>=0.1.9",
+    "ultralytics>=8.3.252",
+    "opencv-python>=4.12.0.88",
+    "supervision>=0.27.0",
 ]
 
 [project.optional-dependencies]

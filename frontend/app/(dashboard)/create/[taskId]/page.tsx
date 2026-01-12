@@ -5,9 +5,12 @@ import { Card } from "@/components/ui/card";
 import { VideoPreview } from "@/components/create/video-preview";
 import { ToolsPanel, YoloModel } from "@/components/create/tools-panel";
 import { Point, Zone } from "@/components/create/drawing-canvas";
-import { useState } from "react";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
-export default function CreateZonePage({ params }: { params: { taskId: string } }) {
+export default function CreateZonePage({ params }: { params: Promise<{ taskId: string }> }) {
+    const { taskId } = React.use(params);
+
     const [zones, setZones] = useState<Zone[]>([]);
     const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
     const [drawingMode, setDrawingMode] = useState<'polygon' | 'line'>('polygon');
@@ -51,8 +54,18 @@ export default function CreateZonePage({ params }: { params: { taskId: string } 
         }
     };
 
+    const router = useRouter(); // Initialize router
+
     const handleProcess = () => {
-        console.log("Processing Zones:", zones);
+        // Start processing job
+        fetch(`http://localhost:8000/api/video/${taskId}/process`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ zones, model: selectedModel }),
+        });
+
+        // Redirect immediately to dashboard
+        router.push('/video-analytics');
     };
 
     return (

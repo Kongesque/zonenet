@@ -10,7 +10,8 @@ interface VideoTask {
     duration: string;
     createdAt: string;
     format: string;
-    status: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    // Add optional thumbnails if backend provides them eventually
 }
 
 export default function Page() {
@@ -18,17 +19,33 @@ export default function Page() {
     const [tasks, setTasks] = useState<VideoTask[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const fetchTasks = async () => {
+        try {
+            const res = await fetch('http://localhost:8000/api/video/tasks');
+            const data = await res.json();
+            // Backend returns list directly, so set it.
+            // Map backend fields to frontend interface if needed.
+            // Backend keys: id, status, filename, created_at, name, format
+            const mappedTasks = data.map((t: any) => ({
+                id: t.id,
+                name: t.name,
+                duration: t.duration || "00:00",
+                createdAt: new Date(t.created_at || Date.now()).toLocaleDateString(),
+                format: t.format || "MP4",
+                status: t.status
+            }));
+            setTasks(mappedTasks.reverse()); // Show newest first
+            setLoading(false);
+        } catch (err) {
+            console.error("Failed to load video tasks", err);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetch('/data/video_tasks.json')
-            .then(res => res.json())
-            .then(data => {
-                setTasks(data.tasks);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("Failed to load video tasks", err);
-                setLoading(false);
-            });
+        fetchTasks();
+        const interval = setInterval(fetchTasks, 5000); // Poll every 5s
+        return () => clearInterval(interval);
     }, []);
 
     const filteredHistory = tasks.filter((item) =>
@@ -55,6 +72,7 @@ export default function Page() {
                             duration={item.duration}
                             createdAt={item.createdAt} // Should be formatted relative time string if wanted, or raw ISO
                             format={item.format}
+                            status={item.status}
                         />
                     ))}
                 </div>

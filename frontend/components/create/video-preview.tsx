@@ -135,6 +135,7 @@ export function VideoPreview({
                 loop
                 muted
                 playsInline
+                crossOrigin="anonymous"
             >
                 {/* Only render source if it's a file, otherwise we use srcObject above */}
                 {videoType === 'file' && <source src={videoUrl || ""} type="video/mp4" />}

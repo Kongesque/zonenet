@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import EchoLoader from "@/components/echo-loader"
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
     DropdownMenu,
@@ -18,6 +19,7 @@ interface VideoCardProps {
     duration: string
     createdAt: string
     format: string
+    status: 'pending' | 'processing' | 'completed' | 'failed'
     onDownload?: () => void
     onDelete?: () => void
 }
@@ -29,6 +31,7 @@ export function VideoCard({
     duration,
     createdAt,
     format,
+    status = 'completed',
     onDownload,
     onDelete,
 }: VideoCardProps) {
@@ -43,9 +46,19 @@ export function VideoCard({
                         className="aspect-video w-full object-cover transition-opacity duration-300 group-hover:opacity-50"
                     />
                     {/* Timestamp badge */}
-                    <div className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
-                        {duration}
-                    </div>
+                    {status === 'completed' && (
+                        <div className="absolute bottom-2 right-2 rounded bg-black/80 px-1.5 py-0.5 text-xs text-white">
+                            {duration}
+                        </div>
+                    )}
+
+                    {/* Processing Overlay */}
+                    {(status === 'processing' || status === 'pending') && (
+                        <div className="absolute inset-0 bg-black/70 flex flex-col items-center justify-center gap-1 z-10 backdrop-blur-sm">
+                            <EchoLoader size={48} className="text-white/80" />
+                            <span className="text-white/80 font-medium animate-pulse text-xs">Processing...</span>
+                        </div>
+                    )}
                 </div>
             </Link>
 

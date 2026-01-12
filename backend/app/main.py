@@ -20,7 +20,7 @@ from app.db.auth import (
     set_password_hash,
 )
 from app.db.database import init_db
-from app.routers import auth, health
+from app.routers import auth, health, video
 
 # Rate limiter instance
 limiter = Limiter(key_func=get_remote_address)
@@ -90,6 +90,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(video.router, prefix="/api/video", tags=["video"])
 
 
 @app.get("/")
