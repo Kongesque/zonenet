@@ -140,7 +140,7 @@ export function Header() {
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Avatar className="cursor-pointer">
-                            <AvatarImage src="kongesque.png" alt="@kongesque" />
+                            <AvatarImage src="/kongesque.png" alt="@kongesque" />
                             <AvatarFallback>KO</AvatarFallback>
                         </Avatar>
                     </DropdownMenuTrigger>
