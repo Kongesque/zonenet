@@ -207,6 +207,7 @@ def run_processing_job(task_id: str, request: ProcessRequest):
         tasks[task_id]["progress"] = 100
         tasks[task_id]["result_url"] = f"/api/video/{task_id}/result"
         tasks[task_id]["count"] = result["count"]
+        tasks[task_id]["events"] = result["events"]
         print(f"Task {task_id} completed. Count: {result['count']}")
         save_task(task_id, tasks[task_id])
         

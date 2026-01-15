@@ -1,5 +1,6 @@
 import cv2
 import time
+import uuid
 import numpy as np
 import shutil
 from pathlib import Path
@@ -66,6 +67,7 @@ def process_video_task(
     # Tracking Setup
     track_history = defaultdict(lambda: [])
     crossed_objects = {}  # {track_id: bool}
+    events_data = [] # List of dicts for schema
     
     # Pre-calculate zones
     zone_polygons = []
@@ -130,11 +132,16 @@ def process_video_task(
             track_ids = results[0].boxes.id.int().cpu().tolist()
             class_ids = results[0].boxes.cls.int().cpu().tolist()
             
+            boxes = results[0].boxes.xywh.cpu()
+            track_ids = results[0].boxes.id.int().cpu().tolist()
+            class_ids = results[0].boxes.cls.int().cpu().tolist()
+            confs = results[0].boxes.conf.float().cpu().tolist()
+            
             # Plot detections first (optional, standard visualize)
             # frame = results[0].plot() 
             # OR draw custom later
             
-            for box, track_id, cls_id in zip(boxes, track_ids, class_ids):
+            for box, track_id, cls_id, conf in zip(boxes, track_ids, class_ids, confs):
                 x, y, w, h = box
                 center_x, center_y = int(x), int(y)
                 
@@ -177,10 +184,26 @@ def process_video_task(
                     inside = cv2.pointPolygonTest(polygon, (center_x, center_y), False)
                     
                     if inside >= 0:
-                        # Mark as counted
+                        is_counted = True
+                        
+                        # Record Event if new
                         if track_id not in crossed_objects:
                             crossed_objects[track_id] = True
-                        is_counted = True
+                            
+                            # Format time MM:SS
+                            elapsed = frame_count / fps
+                            mins = int(elapsed // 60)
+                            secs = int(elapsed % 60)
+                            timestamp = f"{mins:02d}:{secs:02d}"
+                            
+                            events_data.append({
+                                "id": str(uuid.uuid4()),
+                                "label": model.names[cls_id],
+                                "confidence": float(conf),
+                                "start_time": timestamp,
+                                "track_id": int(track_id)
+                            })
+                            
                         break # Counted in at least one valid zone
                 
                 # Visualize (only relevant classes)
@@ -213,5 +236,6 @@ def process_video_task(
     
     return {
         "count": len(crossed_objects),
-        "duration": time.time() - start_time
+        "duration": time.time() - start_time,
+        "events": events_data
     }

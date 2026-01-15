@@ -37,6 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 export default function VideoAnalyticsDetailPage() {
     const params = useParams();
     const taskId = params.taskId as string;
@@ -54,21 +56,23 @@ export default function VideoAnalyticsDetailPage() {
     useEffect(() => {
         if (!taskId) return;
 
-        fetch('/data/video_tasks.json')
-            .then(res => res.json())
+        fetch(`${API_URL}/api/video/${taskId}`)
+            .then(res => {
+                if (!res.ok) throw new Error("Task not found");
+                return res.json();
+            })
             .then(data => {
-                const foundTask = data.tasks.find((t: any) => t.id === taskId);
-                const foundEvents = data.events.filter((e: any) => e.video_task_id === taskId);
-
-                setTask(foundTask || null);
-                setEvents(foundEvents || []);
+                setTask(data);
+                setEvents(data.events || []);
                 setLoading(false);
             })
             .catch(err => {
                 console.error("Failed to load video data", err);
                 setLoading(false);
+                setTask(null);
             });
     }, [taskId]);
+
 
     // Handle play/pause toggle
     const togglePlay = () => setIsPlaying(!isPlaying);
@@ -98,7 +102,7 @@ export default function VideoAnalyticsDetailPage() {
                     <h1 className="text-2xl font-bold tracking-tight">{task.name}</h1>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
-                            {new Date(task.createdAt).toLocaleDateString()}
+                            {task.created_at ? new Date(task.created_at).toLocaleDateString() : 'Unknown Date'}
                         </span>
                         <span>•</span>
                         <span>{task.duration}</span>
@@ -144,7 +148,7 @@ export default function VideoAnalyticsDetailPage() {
                     <div className="relative overflow-hidden rounded-xl border bg-black shadow-sm">
                         <AspectRatio ratio={16 / 9}>
                             <video
-                                src="/preview.mp4"
+                                src={task?.result_url ? `${API_URL}${task.result_url}` : task?.input_path ? `${API_URL}/api/video/${taskId}/stream` : ""}
                                 className="h-full w-full object-cover"
                                 loop
                                 muted
