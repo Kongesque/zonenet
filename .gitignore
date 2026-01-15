@@ -53,6 +53,7 @@ docs/
 
 # IDE & Editors
 .agent/
+.github/
 .vscode/
 .idea/
 *.swp

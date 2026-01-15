@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import EchoLoader from "@/components/echo-loader"
 import { Card, CardAction, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,7 +26,7 @@ interface VideoCardProps {
     onDelete?: () => void
 }
 
-export function VideoCard({
+export const VideoCard = React.memo(function VideoCard({
     taskId,
     name,
     thumbnail = "/zonenet.png",
@@ -97,4 +98,4 @@ export function VideoCard({
             </CardHeader>
         </Card>
     )
-}
+});

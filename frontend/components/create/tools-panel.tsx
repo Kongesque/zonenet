@@ -76,7 +76,7 @@ interface ZoneItemProps {
     onClassesChange: (classes: string[]) => void;
 }
 
-function ZoneItem({
+const ZoneItem = React.memo(function ZoneItem({
     zone,
     index,
     isSelected,
@@ -207,7 +207,7 @@ function ZoneItem({
             )}
         </div>
     );
-}
+});
 
 export function ToolsPanel({
     zones,

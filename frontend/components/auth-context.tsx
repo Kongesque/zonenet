@@ -41,20 +41,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const checkAuth = async () => {
         try {
-            // First check setup status
-            const isSetupComplete = await checkSetupStatus();
+            // Run both requests in parallel to eliminate waterfall
+            const [statusResponse, authResponse] = await Promise.all([
+                fetch(`${API_URL}/api/auth/status`, { credentials: "include" }),
+                fetch(`${API_URL}/api/auth/me`, { credentials: "include" })
+            ]);
 
-            if (!isSetupComplete) {
+            // Process setup status
+            if (statusResponse.ok) {
+                const statusData = await statusResponse.json();
+                setSetupComplete(statusData.setup_complete);
+
+                if (!statusData.setup_complete) {
+                    setIsAuthenticated(false);
+                    setIsLoading(false);
+                    return;
+                }
+            } else {
+                setSetupComplete(null);
                 setIsAuthenticated(false);
                 setIsLoading(false);
                 return;
             }
 
-            // Then check auth
-            const response = await fetch(`${API_URL}/api/auth/me`, {
-                credentials: "include",
-            });
-            setIsAuthenticated(response.ok);
+            // Process auth status (only if setup is complete)
+            setIsAuthenticated(authResponse.ok);
         } catch {
             setIsAuthenticated(false);
         } finally {

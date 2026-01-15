@@ -20,7 +20,7 @@ import {
     DropdownMenuPortal,
     DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useAuth } from "@/components/auth-context"
 import {
     Breadcrumb,
@@ -74,8 +74,8 @@ export function Header() {
         setPageLabel(null)
     }, [pathname])
 
-    // Determine if we're on a detail page and get breadcrumb info
-    const getBreadcrumbInfo = () => {
+    // Memoize breadcrumb info to avoid recalculating on every render
+    const breadcrumbInfo = useMemo(() => {
         // Match /video-analytics/[taskId]
         const videoMatch = pathname.match(/^\/video-analytics\/([^/]+)$/)
         if (videoMatch) {
@@ -95,9 +95,7 @@ export function Header() {
         }
 
         return null
-    }
-
-    const breadcrumbInfo = getBreadcrumbInfo()
+    }, [pathname, pageLabel])
 
     return (
         <header className="sticky top-0 z-20 bg-background flex h-12 shrink-0 items-center justify-between border-b px-4">
